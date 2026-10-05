@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="family_odeh" model="res.partner">
+            <field name="name">Odeh Family</field>
+            <field name="is_company" eval="True"/>
+            <field name="phone">+972 59 812 4400</field>
+            <field name="email">odeh.family@example.com</field>
+        </record>
+        <record id="family_khoury" model="res.partner">
+            <field name="name">Khoury Family</field>
+            <field name="is_company" eval="True"/>
+            <field name="phone">+972 59 812 4500</field>
+            <field name="email">khoury.family@example.com</field>
+        </record>
+        <record id="family_haddad" model="res.partner">
+            <field name="name">Haddad Family</field>
+            <field name="is_company" eval="True"/>
+            <field name="phone">+972 59 812 4600</field>
+            <field name="email">haddad.family@example.com</field>
+        </record>
+        <record id="student_layan" model="res.partner">
+            <field name="name">Layan Odeh</field>
+            <field name="parent_id" ref="family_odeh"/>
+            <field name="type">contact</field>
+            <field name="is_student" eval="True"/>
+            <field name="school_id" ref="school_freres_bh"/>
+            <field name="grade_id" ref="grade_11"/>
+            <field name="curriculum_id" ref="curriculum_ial"/>
+            <field name="subject_ids" eval="[Command.set([ref('subject_physics'), ref('subject_maths')])]"/>
+            <field name="phone">+972 59 812 4410</field>
+            <field name="email">layan.demo@example.com</field>
+            <field name="teaching_invoice_to">guardian</field>
+        </record>
+        <record id="student_karim" model="res.partner">
+            <field name="name">Karim Odeh</field>
+            <field name="parent_id" ref="family_odeh"/>
+            <field name="type">contact</field>
+            <field name="is_student" eval="True"/>
+            <field name="school_id" ref="school_freres_bh"/>
+            <field name="grade_id" ref="grade_9"/>
+            <field name="curriculum_id" ref="curriculum_igcse"/>
+            <field name="subject_ids" eval="[Command.set([ref('subject_maths')])]"/>
+            <field name="phone">+972 59 812 4411</field>
+            <field name="email">karim.demo@example.com</field>
+            <field name="teaching_invoice_to">guardian</field>
+        </record>
+        <record id="student_rami" model="res.partner">
+            <field name="name">Rami Khoury</field>
+            <field name="parent_id" ref="family_khoury"/>
+            <field name="type">contact</field>
+            <field name="is_student" eval="True"/>
+            <field name="school_id" ref="school_rosary_bh"/>
+            <field name="grade_id" ref="grade_12"/>
+            <field name="curriculum_id" ref="curriculum_ib"/>
+            <field name="subject_ids" eval="[Command.set([ref('subject_physics')])]"/>
+            <field name="phone">+972 59 812 4510</field>
+            <field name="email">rami.demo@example.com</field>
+            <field name="teaching_invoice_to">student</field>
+        </record>
+        <record id="student_omar" model="res.partner">
+            <field name="name">Omar Khoury</field>
+            <field name="parent_id" ref="family_khoury"/>
+            <field name="type">contact</field>
+            <field name="is_student" eval="True"/>
+            <field name="school_id" ref="school_rosary_bh"/>
+            <field name="grade_id" ref="grade_10"/>
+            <field name="curriculum_id" ref="curriculum_igcse"/>
+            <field name="subject_ids" eval="[Command.set([ref('subject_maths')])]"/>
+            <field name="phone">+972 59 812 4511</field>
+            <field name="email">omar.demo@example.com</field>
+            <field name="teaching_invoice_to">guardian</field>
+        </record>
+        <record id="student_nour" model="res.partner">
+            <field name="name">Nour Haddad</field>
+            <field name="parent_id" ref="family_haddad"/>
+            <field name="type">contact</field>
+            <field name="is_student" eval="True"/>
+            <field name="school_id" ref="school_other"/>
+            <field name="grade_id" ref="grade_10"/>
+            <field name="curriculum_id" ref="curriculum_igcse"/>
+            <field name="subject_ids" eval="[Command.set([ref('subject_maths')])]"/>
+            <field name="phone">+972 59 812 4610</field>
+            <field name="email">nour.demo@example.com</field>
+            <field name="teaching_invoice_to">guardian</field>
+            <field name="school_other">Schmidt School</field>
+        </record>
+        <record id="student_lina" model="res.partner">
+            <field name="name">Lina Haddad</field>
+            <field name="parent_id" ref="family_haddad"/>
+            <field name="type">contact</field>
+            <field name="is_student" eval="True"/>
+            <field name="school_id" ref="school_other"/>
+            <field name="grade_id" ref="grade_11"/>
+            <field name="curriculum_id" ref="curriculum_ial"/>
+            <field name="subject_ids" eval="[Command.set([ref('subject_maths')])]"/>
+            <field name="phone">+972 59 812 4611</field>
+            <field name="email">lina.demo@example.com</field>
+            <field name="teaching_invoice_to">guardian</field>
+            <field name="school_other">Schmidt School</field>
+        </record>
+        <record id="portal_user_layan" model="res.users">
+            <field name="login">layan</field>
+            <field name="password">demo</field>
+            <field name="partner_id" ref="student_layan"/>
+            <field name="group_ids" eval="[Command.set([ref('base.group_portal')])]"/>
+        </record>
+        <record id="portal_user_odeh" model="res.users">
+            <field name="login">odeh</field>
+            <field name="password">demo</field>
+            <field name="partner_id" ref="family_odeh"/>
+            <field name="group_ids" eval="[Command.set([ref('base.group_portal')])]"/>
+        </record>
+    </data>
+</odoo>

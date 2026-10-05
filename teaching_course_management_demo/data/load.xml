@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Slots, sessions in every status, invoices + payment, courses and announcements,
+             created through the real methods (relative to the install day) -->
+        <function model="res.company" name="_teaching_demo_load"/>
+    </data>
+</odoo>

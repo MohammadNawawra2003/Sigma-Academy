@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="subject_physics" model="teaching.subject">
+            <field name="name">Physics</field>
+            <field name="sequence">1</field>
+        </record>
+        <record id="subject_maths" model="teaching.subject">
+            <field name="name">Maths</field>
+            <field name="sequence">2</field>
+        </record>
+        <record id="curriculum_igcse" model="teaching.curriculum">
+            <field name="name">IGCSE</field>
+            <field name="code">IGCSE</field>
+            <field name="sequence">1</field>
+        </record>
+        <record id="curriculum_ial" model="teaching.curriculum">
+            <field name="name">IAL</field>
+            <field name="code">IAL</field>
+            <field name="sequence">2</field>
+        </record>
+        <record id="curriculum_ib" model="teaching.curriculum">
+            <field name="name">IB</field>
+            <field name="code">IB</field>
+            <field name="sequence">3</field>
+        </record>
+        <record id="grade_9" model="teaching.grade">
+            <field name="name">Grade 9</field>
+            <field name="sequence">9</field>
+        </record>
+        <record id="grade_10" model="teaching.grade">
+            <field name="name">Grade 10</field>
+            <field name="sequence">10</field>
+        </record>
+        <record id="grade_11" model="teaching.grade">
+            <field name="name">Grade 11</field>
+            <field name="sequence">11</field>
+        </record>
+        <record id="grade_12" model="teaching.grade">
+            <field name="name">Grade 12</field>
+            <field name="sequence">12</field>
+        </record>
+        <record id="school_freres_bh" model="teaching.school">
+            <field name="name">Frères – Beit Hanina</field>
+            <field name="sequence">1</field>
+        </record>
+        <record id="school_freres_bethlehem" model="teaching.school">
+            <field name="name">Frères – Bethlehem</field>
+            <field name="sequence">2</field>
+        </record>
+        <record id="school_freres_jerusalem" model="teaching.school">
+            <field name="name">Frères – Jerusalem</field>
+            <field name="sequence">3</field>
+        </record>
+        <record id="school_rosary_bh" model="teaching.school">
+            <field name="name">Rosary Sisters – Beit Hanina</field>
+            <field name="sequence">4</field>
+        </record>
+        <record id="school_armenian" model="teaching.school">
+            <field name="name">Armenian School</field>
+            <field name="sequence">5</field>
+        </record>
+        <record id="school_jas_bh" model="teaching.school">
+            <field name="name">Jerusalem American School – Beit Hanina</field>
+            <field name="sequence">6</field>
+        </record>
+        <record id="school_jas_bethlehem" model="teaching.school">
+            <field name="name">Jerusalem American School – Bethlehem</field>
+            <field name="sequence">7</field>
+        </record>
+        <record id="school_mutran" model="teaching.school">
+            <field name="name">Al Mutran</field>
+            <field name="sequence">8</field>
+        </record>
+        <record id="school_schmidt" model="teaching.school">
+            <field name="name">Schmidt School</field>
+            <field name="sequence">9</field>
+        </record>
+        <record id="school_other" model="teaching.school">
+            <field name="name">Other</field>
+            <field name="sequence">10</field>
+            <field name="is_other" eval="True"/>
+        </record>
+    </data>
+</odoo>
