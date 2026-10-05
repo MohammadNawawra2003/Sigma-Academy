@@ -182,6 +182,12 @@ class TestTeachingSessions(TeachingCommonMixin, TransactionCase):
         self.assertAlmostEqual(invoice.teaching_amount_received + invoice.amount_residual_signed, invoice.amount_total_signed)
         self.assertAlmostEqual(self.family_a.credit, 125.0)
 
+    def test_reminders_email_only(self):
+        """W11: session types remind by email (6 h before); no paid SMS reminder sneaks in from Odoo's defaults."""
+        for atype in self.type_one | self.type_group | self.type_review | self.type_course:
+            self.assertEqual(atype.reminder_ids, self.env.ref('calendar.alarm_mail_2'))
+        self.assertNotIn('sms', self.make_session(self.student_a1).alarm_ids.mapped('alarm_type'))
+
     def test_followup_monthly_no_cron(self):
         """R13: an automatic 30-day statement level exists; the module adds no cron of its own."""
         level = self.env['account_followup.followup.line'].search(

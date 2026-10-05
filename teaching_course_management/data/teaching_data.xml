@@ -65,6 +65,7 @@
             <field name="event_videocall_source">discuss</field>
             <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
             <field name="question_ids" eval="[Command.set([ref('appointment_question_goal')])]"/>
+            <field name="reminder_ids" eval="[Command.set([ref('calendar.alarm_mail_2')])]"/>
             <field name="teaching_product_id" ref="product_session_one_to_one"/>
             <field name="is_published" eval="True"/>
         </record>
@@ -84,6 +85,7 @@
             <field name="event_videocall_source">discuss</field>
             <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
             <field name="question_ids" eval="[Command.set([ref('appointment_question_goal')])]"/>
+            <field name="reminder_ids" eval="[Command.set([ref('calendar.alarm_mail_2')])]"/>
             <field name="teaching_product_id" ref="product_session_group"/>
             <field name="teaching_is_group" eval="True"/>
             <field name="is_published" eval="True"/>
@@ -104,6 +106,7 @@
             <field name="event_videocall_source">discuss</field>
             <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
             <field name="question_ids" eval="[Command.set([ref('appointment_question_goal')])]"/>
+            <field name="reminder_ids" eval="[Command.set([ref('calendar.alarm_mail_2')])]"/>
             <field name="teaching_product_id" ref="product_session_review"/>
             <field name="teaching_is_group" eval="True"/>
             <field name="is_published" eval="True"/>
@@ -121,6 +124,7 @@
             <field name="user_capacity">7</field>
             <field name="event_videocall_source">discuss</field>
             <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
+            <field name="reminder_ids" eval="[Command.set([ref('calendar.alarm_mail_2')])]"/>
             <field name="teaching_product_id" ref="product_session_course"/>
             <field name="teaching_is_group" eval="True"/>
             <field name="is_published" eval="False"/>
