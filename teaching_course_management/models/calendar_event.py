@@ -33,7 +33,7 @@ class CalendarEvent(models.Model):
     teaching_actual_duration = fields.Float('Actual Duration', help='May be more or less than planned.')
     teaching_duration_confirmed = fields.Boolean('Duration Confirmed', readonly=True, copy=False)
     teaching_billing = fields.Selection([('bill', 'Bill in full'), ('waive', 'Waive')], 'Billing', default='bill', copy=False)
-    teaching_currency_id = fields.Many2one('res.currency', compute='_compute_teaching_currency')
+    teaching_currency_id = fields.Many2one('res.currency', compute='_compute_teaching_currency', store=True)
     teaching_price_unit = fields.Monetary(
         'Price per Hour', currency_field='teaching_currency_id',
         compute='_compute_teaching_price_unit', store=True, readonly=False)
@@ -71,8 +71,8 @@ class CalendarEvent(models.Model):
             midnight = tz.localize(datetime.combine(local_day, time.min))
             event.teaching_cancel_deadline = midnight.astimezone(pytz.utc).replace(tzinfo=None)
 
-    @api.depends_context('company')
-    def _compute_teaching_currency(self):
+    @api.depends('appointment_type_id')
+    def _compute_teaching_currency(self):  # stored so the Amount can be summed in pivots
         for event in self:
             event.teaching_currency_id = self.env.company.currency_id
 

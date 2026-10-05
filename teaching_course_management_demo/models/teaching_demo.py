@@ -1,9 +1,11 @@
+import base64
 from datetime import date, datetime, time, timedelta
 
 import pytz
 from dateutil.relativedelta import MO, relativedelta
 
 from odoo import Command, api, models
+from odoo.tools import file_open
 
 TZ = pytz.timezone('Asia/Hebron')
 
@@ -32,6 +34,9 @@ class ResCompany(models.Model):
         # After the chart: loading a template resets the currency to the template's one.
         if not self.env['account.move.line'].search_count([('company_id', '=', company.id)], limit=1):
             company.write({'currency_id': self.env.ref('base.ILS').id, 'country_id': self.env.ref('base.ps').id})
+        if company.name == 'My Company':  # untouched fresh database only
+            with file_open('teaching_course_management/static/description/icon.png', 'rb') as f:
+                company.write({'name': 'Sigma Academy', 'logo': base64.b64encode(f.read())})
 
     @api.model
     def _teaching_demo_load(self):

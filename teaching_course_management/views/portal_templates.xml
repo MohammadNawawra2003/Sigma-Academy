@@ -6,14 +6,14 @@
         </xpath>
         <div id="portal_client_category" position="inside">
             <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/teaching_course_management/static/description/icon.png'"/>
+                <t t-set="icon" t-value="'/appointment/static/src/img/calendar.svg'"/>
                 <t t-set="title">My Sessions</t>
                 <t t-set="text">Upcoming and past lessons, meeting links and materials</t>
                 <t t-set="url" t-value="'/my/sessions'"/>
                 <t t-set="placeholder_count" t-value="'teaching_session_count'"/>
             </t>
             <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/teaching_course_management/static/description/icon.png'"/>
+                <t t-set="icon" t-value="'/appointment/static/src/img/guy.svg'"/>
                 <t t-set="title">My Courses</t>
                 <t t-set="text">Live courses you are enrolled in</t>
                 <t t-set="url" t-value="'/my/courses'"/>
@@ -34,7 +34,7 @@
                 <t t-set="config_card" t-value="True"/>
             </t>
             <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/appointment/static/src/img/calendar.svg'"/>
+                <t t-set="icon" t-value="'/appointment/static/src/img/clock.svg'"/>
                 <t t-set="title">Book a Session</t>
                 <t t-set="text">Pick a free hour in the instructor's calendar</t>
                 <t t-set="url" t-value="'/appointment'"/>
@@ -69,7 +69,7 @@
         <tbody>
             <tr t-foreach="rows" t-as="event">
                 <td><t t-out="event.subject_id.name or ''"/> · <t t-out="event.appointment_type_id.name"/></td>
-                <td><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz}"/></td>
+                <td><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz, 'format': 'EEE d MMM y, HH:mm'}"/></td>
                 <td t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
                 <td t-out="event.user_id.name"/>
                 <td><span class="badge text-bg-light" t-field="event.appointment_status"/></td>
@@ -105,7 +105,7 @@
                     <div class="col-md-6">
                         <dl class="row mb-0">
                             <dt class="col-5">Status</dt><dd class="col-7"><span class="badge text-bg-light" t-field="event.appointment_status"/></dd>
-                            <dt class="col-5">When</dt><dd class="col-7"><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz}"/> (<span t-field="event.duration" t-options="{'widget': 'float_time'}"/>)</dd>
+                            <dt class="col-5">When</dt><dd class="col-7"><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz, 'format': 'EEE d MMM y, HH:mm'}"/> (<span t-field="event.duration" t-options="{'widget': 'float_time'}"/>)</dd>
                             <dt class="col-5">Student(s)</dt><dd class="col-7" t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
                             <dt class="col-5">Instructor</dt><dd class="col-7" t-out="event.user_id.name"/>
                             <dt class="col-5">Mode</dt><dd class="col-7"><span t-field="event.teaching_mode"/></dd>

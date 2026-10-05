@@ -77,7 +77,7 @@ class TeachingPortal(CustomerPortal):
         if not event.access_token:  # back-office events have none; the native cancel route needs it
             event.access_token = uuid.uuid4().hex
         attachments = request.env['ir.attachment'].sudo().search(
-            [('res_model', '=', 'calendar.event'), ('res_id', '=', event.id)])
+            [('res_model', '=', 'calendar.event'), ('res_id', '=', event.id), ('mimetype', '!=', 'text/calendar')])
         for attachment in attachments:
             attachment.generate_access_token()
         values = self._prepare_portal_layout_values()
