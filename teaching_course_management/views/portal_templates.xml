@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_teaching" inherit_id="portal.portal_my_home" name="Teaching cards" priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+        </xpath>
+        <div id="portal_client_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/teaching_course_management/static/description/icon.png'"/>
+                <t t-set="title">My Sessions</t>
+                <t t-set="text">Upcoming and past lessons, meeting links and materials</t>
+                <t t-set="url" t-value="'/my/sessions'"/>
+                <t t-set="placeholder_count" t-value="'teaching_session_count'"/>
+            </t>
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/teaching_course_management/static/description/icon.png'"/>
+                <t t-set="title">My Courses</t>
+                <t t-set="text">Live courses you are enrolled in</t>
+                <t t-set="url" t-value="'/my/courses'"/>
+                <t t-set="placeholder_count" t-value="'teaching_course_count'"/>
+            </t>
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/account/static/src/img/bill.svg'"/>
+                <t t-set="title">Balance</t>
+                <t t-set="text">What is invoiced, paid and still due</t>
+                <t t-set="url" t-value="'/my/balance'"/>
+                <t t-set="config_card" t-value="True"/>
+            </t>
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/portal/static/src/img/portal-connection.svg'"/>
+                <t t-set="title">Announcements</t>
+                <t t-set="text">News and new courses from the academy</t>
+                <t t-set="url" t-value="teaching_announcements_url"/>
+                <t t-set="config_card" t-value="True"/>
+            </t>
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/appointment/static/src/img/calendar.svg'"/>
+                <t t-set="title">Book a Session</t>
+                <t t-set="text">Pick a free hour in the instructor's calendar</t>
+                <t t-set="url" t-value="'/appointment'"/>
+                <t t-set="config_card" t-value="True"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="portal_teaching_student_selector" name="Teaching: child selector">
+        <div t-if="len(teaching_students) &gt; 1" class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted">Student:</span>
+            <a t-attf-href="#{base_url}" t-attf-class="btn btn-sm #{'btn-primary' if not teaching_selected else 'btn-outline-primary'}">All</a>
+            <t t-foreach="teaching_students" t-as="student">
+                <a t-attf-href="#{base_url}?student=#{student.id}"
+                   t-attf-class="btn btn-sm #{'btn-primary' if teaching_selected and teaching_selected.id == student.id else 'btn-outline-primary'}"
+                   t-out="student.name"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="portal_teaching_session_rows" name="Teaching: session rows">
+        <thead>
+            <tr>
+                <th>Session</th>
+                <th>Date</th>
+                <th>Student(s)</th>
+                <th>Instructor</th>
+                <th>Status</th>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+            <tr t-foreach="rows" t-as="event">
+                <td><t t-out="event.subject_id.name or ''"/> · <t t-out="event.appointment_type_id.name"/></td>
+                <td><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz}"/></td>
+                <td t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
+                <td t-out="event.user_id.name"/>
+                <td><span class="badge text-bg-light" t-field="event.appointment_status"/></td>
+                <td class="text-end text-nowrap">
+                    <a t-if="event.appointment_status == 'booked' and event.teaching_mode == 'online' and event.videocall_location and event.stop &gt;= datetime.datetime.now()"
+                       t-att-href="event.videocall_location" target="_blank" class="btn btn-sm btn-primary">Join</a>
+                    <a t-attf-href="/my/sessions/#{event.id}" class="btn btn-sm btn-secondary">Open</a>
+                </td>
+            </tr>
+        </tbody>
+    </template>
+
+    <template id="portal_my_sessions" name="My Sessions">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <h3 class="mt-3">My Sessions</h3>
+            <t t-call="teaching_course_management.portal_teaching_student_selector"><t t-set="base_url" t-value="'/my/sessions'"/></t>
+            <h5 class="mt-3">Upcoming</h5>
+            <p t-if="not upcoming" class="text-muted">No upcoming sessions. <a href="/appointment">Book a session</a>.</p>
+            <t t-else="" t-call="portal.portal_table"><t t-set="rows" t-value="upcoming"/><t t-call="teaching_course_management.portal_teaching_session_rows"/></t>
+            <h5 class="mt-4">Past</h5>
+            <p t-if="not past" class="text-muted">No past sessions.</p>
+            <t t-else="" t-call="portal.portal_table"><t t-set="rows" t-value="past"/><t t-call="teaching_course_management.portal_teaching_session_rows"/></t>
+        </t>
+    </template>
+
+    <template id="portal_my_session" name="Session">
+        <t t-call="portal.portal_layout">
+            <div class="mt-3">
+                <a href="/my/sessions">&#8592; My Sessions</a>
+                <h3 class="mt-2"><t t-out="event.subject_id.name or ''"/> · <t t-out="event.appointment_type_id.name"/></h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-5">Status</dt><dd class="col-7"><span class="badge text-bg-light" t-field="event.appointment_status"/></dd>
+                            <dt class="col-5">When</dt><dd class="col-7"><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz}"/> (<span t-field="event.duration" t-options="{'widget': 'float_time'}"/>)</dd>
+                            <dt class="col-5">Student(s)</dt><dd class="col-7" t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
+                            <dt class="col-5">Instructor</dt><dd class="col-7" t-out="event.user_id.name"/>
+                            <dt class="col-5">Mode</dt><dd class="col-7"><span t-field="event.teaching_mode"/></dd>
+                            <dt class="col-5">Meeting link</dt>
+                            <dd class="col-7">
+                                <a t-if="show_link" t-att-href="event.videocall_location" target="_blank" class="btn btn-sm btn-primary">Join Meeting</a>
+                                <span t-elif="event.teaching_mode == 'onsite'" class="text-muted">On-site session, no link needed.</span>
+                                <span t-elif="event.appointment_status == 'request'" class="text-muted">Sent once the academy confirms.</span>
+                                <span t-else="" class="text-muted">—</span>
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Session goal</h6>
+                        <p t-if="event.teaching_goal" t-out="event.teaching_goal" style="white-space: pre-line;"/>
+                        <p t-else="" class="text-muted">—</p>
+                        <h6>Instructor notes</h6>
+                        <div t-if="event.teaching_notes" t-field="event.teaching_notes"/>
+                        <p t-else="" class="text-muted">—</p>
+                        <h6>Materials</h6>
+                        <ul t-if="attachments" class="list-unstyled">
+                            <li t-foreach="attachments" t-as="attachment">
+                                <a t-attf-href="/web/content/#{attachment.id}?download=true&amp;access_token=#{attachment.access_token}" t-out="attachment.name"/>
+                            </li>
+                        </ul>
+                        <p t-else="" class="text-muted">No materials yet.</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a t-if="can_cancel" t-attf-href="/calendar/cancel/#{event.access_token}?partner_id=#{partner_id}"
+                       class="btn btn-outline-danger"
+                       onclick="return window.confirm('Cancel this session?');">Cancel</a>
+                    <p t-elif="event.appointment_status == 'booked'" class="text-muted">Changes are no longer possible. Please contact the academy.</p>
+                    <p class="text-muted small mt-2">To reschedule, cancel and book again. Free cancellation until midnight the night before.</p>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_my_courses" name="My Courses">
+        <t t-call="portal.portal_layout">
+            <h3 class="mt-3">My Courses</h3>
+            <t t-call="teaching_course_management.portal_teaching_student_selector"><t t-set="base_url" t-value="'/my/courses'"/></t>
+            <p t-if="not courses" class="text-muted">You are not enrolled in a course yet. <a t-att-href="teaching_announcements_url">See the announcements</a>.</p>
+            <div t-foreach="courses" t-as="course" class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title" t-out="course.name"/>
+                    <p class="text-muted mb-2">
+                        <t t-out="course.subject_id.name"/> · <t t-out="course.curriculum_id.name"/> · <t t-out="course.grade_id.name"/>
+                        · <span t-out="course.price_per_session" t-options="{'widget': 'monetary', 'display_currency': course.currency_id}"/> per session
+                    </p>
+                    <p t-if="course.schedule_summary" t-out="course.schedule_summary"/>
+                    <t t-set="rows" t-value="course.session_ids.filtered(lambda e: e.teaching_student_ids &amp; scope).sorted('start')"/>
+                    <t t-if="rows" t-call="portal.portal_table"><t t-call="teaching_course_management.portal_teaching_session_rows"/></t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_my_balance" name="Balance">
+        <t t-call="portal.portal_layout">
+            <h3 class="mt-3">Balance</h3>
+            <div class="row g-3 my-2">
+                <div class="col-6 col-md-3"><div class="border rounded p-3"><div class="text-muted small">Balance due</div><div class="fs-4 fw-bold" t-out="balance_due" t-options="{'widget': 'monetary', 'display_currency': currency}"/></div></div>
+                <div class="col-6 col-md-3"><div class="border rounded p-3"><div class="text-muted small">Invoiced</div><div class="fs-4" t-out="invoiced" t-options="{'widget': 'monetary', 'display_currency': currency}"/></div></div>
+                <div class="col-6 col-md-3"><div class="border rounded p-3"><div class="text-muted small">Paid</div><div class="fs-4" t-out="paid" t-options="{'widget': 'monetary', 'display_currency': currency}"/></div></div>
+                <div class="col-6 col-md-3"><div class="border rounded p-3"><div class="text-muted small">Outstanding</div><div class="fs-4" t-out="outstanding" t-options="{'widget': 'monetary', 'display_currency': currency}"/></div></div>
+            </div>
+            <h5 class="mt-4">Unpaid invoices</h5>
+            <p t-if="not unpaid_invoices" class="text-muted">Nothing is due. Thank you.</p>
+            <t t-else="" t-call="portal.portal_table">
+                <thead><tr><th>Invoice</th><th>Date</th><th>Student</th><th class="text-end">Total</th><th class="text-end">Still due</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="unpaid_invoices" t-as="invoice">
+                        <td><a t-att-href="invoice.get_portal_url()" t-out="invoice.name"/></td>
+                        <td><span t-field="invoice.invoice_date"/></td>
+                        <td t-out="invoice.teaching_student_id.name or ''"/>
+                        <td class="text-end"><span t-field="invoice.amount_total"/></td>
+                        <td class="text-end"><span t-field="invoice.amount_residual"/></td>
+                        <td><span class="badge text-bg-light" t-field="invoice.payment_state"/></td>
+                    </tr>
+                </tbody>
+            </t>
+            <h5 class="mt-4">Payments received</h5>
+            <p t-if="not payments" class="text-muted">No payments recorded yet.</p>
+            <t t-else="" t-call="portal.portal_table">
+                <thead><tr><th>Reference</th><th>Date</th><th>Method</th><th class="text-end">Amount</th></tr></thead>
+                <tbody>
+                    <tr t-foreach="payments" t-as="payment">
+                        <td t-out="payment.name"/>
+                        <td><span t-field="payment.date"/></td>
+                        <td t-out="payment.journal_id.name"/>
+                        <td class="text-end"><span t-field="payment.amount"/></td>
+                    </tr>
+                </tbody>
+            </t>
+            <p class="text-muted small mt-3">Payments are made in cash or by bank transfer. <a href="/my/invoices">All invoices</a></p>
+        </t>
+    </template>
+</odoo>

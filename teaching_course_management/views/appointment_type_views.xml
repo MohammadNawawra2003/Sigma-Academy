@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="appointment_type_view_form_teaching" model="ir.ui.view">
+        <field name="name">appointment.type.form.teaching</field>
+        <field name="model">appointment.type</field>
+        <field name="inherit_id" ref="appointment.appointment_type_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='options_left_details']" position="inside">
+                <field name="teaching_product_id" groups="teaching_course_management.group_teaching_admin"/>
+                <field name="teaching_price" invisible="not teaching_product_id" groups="teaching_course_management.group_teaching_admin"/>
+                <field name="teaching_is_group" invisible="not teaching_product_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="appointment_type_view_list_teaching_prices" model="ir.ui.view">
+        <field name="name">appointment.type.list.teaching.prices</field>
+        <field name="model">appointment.type</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Session Types &amp; Prices" editable="bottom" create="0">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="teaching_product_id" readonly="1"/>
+                <field name="teaching_price"/>
+                <field name="manage_capacity"/>
+                <field name="user_capacity" invisible="not manage_capacity"/>
+                <field name="teaching_is_group"/>
+                <field name="is_published" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_teaching_session_types" model="ir.actions.act_window">
+        <field name="name">Session Types &amp; Prices</field>
+        <field name="res_model">appointment.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('teaching_product_id', '!=', False)]</field>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('appointment_type_view_list_teaching_prices')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No session types</p><p>Session types are appointment types linked to a teaching product (price per hour).</p></field>
+    </record>
+
+    <!-- My Availability: the native appointment form (Availabilities tab = dated slots) -->
+    <record id="action_teaching_my_availability" model="ir.actions.act_window">
+        <field name="name">My Availability</field>
+        <field name="res_model">appointment.type</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('teaching_product_id', '!=', False), ('staff_user_ids', 'in', uid)]</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">You are not staff on any session type</p><p>Ask the administrator to add you to the session types you teach, then add dated slots in the Availabilities tab.</p></field>
+    </record>
+</odoo>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_partner_view_form_teaching" model="ir.ui.view">
+        <field name="name">res.partner.form.teaching</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_teaching_sessions" type="object" class="oe_stat_button" icon="fa-calendar"
+                        invisible="not is_student and not is_guardian" groups="teaching_course_management.group_teaching_instructor">
+                    <field name="teaching_session_count" widget="statinfo" string="Sessions"/>
+                </button>
+                <button name="action_teaching_courses" type="object" class="oe_stat_button" icon="fa-graduation-cap"
+                        invisible="not is_student and not is_guardian" groups="teaching_course_management.group_teaching_instructor">
+                    <field name="teaching_course_count" widget="statinfo" string="Courses"/>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='contact_addresses']" position="before">
+                <page string="Academic" name="teaching_academic" groups="teaching_course_management.group_teaching_instructor">
+                    <field name="is_guardian" invisible="1"/>
+                    <field name="school_is_other" invisible="1"/>
+                    <group>
+                        <group>
+                            <field name="is_student"/>
+                            <field name="school_id" invisible="not is_student" options="{'no_create': True}"/>
+                            <field name="school_other" invisible="not is_student or not school_is_other" required="is_student and school_is_other"/>
+                            <field name="grade_id" invisible="not is_student" options="{'no_create': True}"/>
+                            <field name="curriculum_id" invisible="not is_student" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="subject_ids" widget="many2many_tags" invisible="not is_student" options="{'no_create': True}"/>
+                            <field name="teaching_invoice_to" widget="radio" invisible="not is_student"/>
+                        </group>
+                    </group>
+                    <div class="text-muted" invisible="not is_student">
+                        The guardian is the family contact set in the Company field above.
+                        WhatsApp messages use the Phone field (with country code).
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="res_partner_view_list_students" model="ir.ui.view">
+        <field name="name">res.partner.list.students</field>
+        <field name="model">res.partner</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Students">
+                <field name="name"/>
+                <field name="parent_id" string="Guardian"/>
+                <field name="school_id"/>
+                <field name="grade_id"/>
+                <field name="curriculum_id"/>
+                <field name="phone"/>
+                <field name="email" optional="hide"/>
+                <field name="credit" string="Balance" sum="Total"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="res_partner_view_list_guardians" model="ir.ui.view">
+        <field name="name">res.partner.list.guardians</field>
+        <field name="model">res.partner</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Guardians">
+                <field name="name"/>
+                <field name="child_ids" string="Children" widget="many2many_tags"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="credit" string="Balance" sum="Total"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="res_partner_view_kanban_students" model="ir.ui.view">
+        <field name="name">res.partner.kanban.students</field>
+        <field name="model">res.partner</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="credit"/>
+                <templates>
+                    <t t-name="card">
+                        <field name="name" class="fw-bold fs-5"/>
+                        <field name="school_id" class="text-muted"/>
+                        <div class="text-muted"><field name="grade_id"/> · <field name="curriculum_id"/></div>
+                        <field name="subject_ids" widget="many2many_tags"/>
+                        <footer>
+                            <field name="parent_id" class="small"/>
+                            <div t-att-class="'ms-auto ' + (record.credit.raw_value > 0 ? 'text-danger fw-bold' : 'text-muted')">
+                                Balance <field name="credit" widget="monetary"/>
+                            </div>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="res_partner_view_search_teaching" model="ir.ui.view">
+        <field name="name">res.partner.search.teaching</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='inactive']" position="before">
+                <filter name="students" string="Students" domain="[('is_student', '=', True)]"/>
+                <filter name="guardians" string="Guardians" domain="[('is_guardian', '=', True)]"/>
+                <filter name="has_outstanding" string="Has Outstanding" domain="[('credit', '>', 0)]"/>
+                <separator/>
+            </xpath>
+            <xpath expr="//group[@name='group_by']" position="inside">
+                <filter name="group_grade" string="Grade" context="{'group_by': 'grade_id'}"/>
+                <filter name="group_curriculum" string="Curriculum" context="{'group_by': 'curriculum_id'}"/>
+                <filter name="group_school" string="School" context="{'group_by': 'school_id'}"/>
+                <filter name="group_guardian" string="Guardian" context="{'group_by': 'parent_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_teaching_students" model="ir.actions.act_window">
+        <field name="name">Students</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_student', '=', True)]</field>
+        <field name="context">{'default_is_student': True, 'default_company_type': 'person'}</field>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'kanban', 'view_id': ref('res_partner_view_kanban_students')}),
+            Command.create({'view_mode': 'list', 'view_id': ref('res_partner_view_list_students')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Add your first student</p><p>Set the guardian (family contact), school, grade and curriculum, then grant portal access.</p></field>
+    </record>
+
+    <record id="action_teaching_guardians" model="ir.actions.act_window">
+        <field name="name">Guardians</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_guardian', '=', True)]</field>
+        <field name="context">{'default_company_type': 'company'}</field>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('res_partner_view_list_guardians')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No guardians yet</p><p>A contact becomes a guardian as soon as one of its child contacts is a student.</p></field>
+    </record>
+</odoo>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="teaching_subject_view_list" model="ir.ui.view">
+        <field name="name">teaching.subject.list</field>
+        <field name="model">teaching.subject</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="instructor_ids" widget="many2many_tags"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_teaching_subject" model="ir.actions.act_window">
+        <field name="name">Subjects</field>
+        <field name="res_model">teaching.subject</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Add the subjects you teach</p><p>e.g. Physics, Maths.</p></field>
+    </record>
+
+    <record id="teaching_curriculum_view_list" model="ir.ui.view">
+        <field name="name">teaching.curriculum.list</field>
+        <field name="model">teaching.curriculum</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_teaching_curriculum" model="ir.actions.act_window">
+        <field name="name">Curricula</field>
+        <field name="res_model">teaching.curriculum</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Add a curriculum</p><p>e.g. IGCSE, IAL, IB.</p></field>
+    </record>
+
+    <record id="teaching_grade_view_list" model="ir.ui.view">
+        <field name="name">teaching.grade.list</field>
+        <field name="model">teaching.grade</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_teaching_grade" model="ir.actions.act_window">
+        <field name="name">Grades</field>
+        <field name="res_model">teaching.grade</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Add a grade</p><p>e.g. Grade 9 to Grade 12.</p></field>
+    </record>
+
+    <record id="teaching_school_view_list" model="ir.ui.view">
+        <field name="name">teaching.school.list</field>
+        <field name="model">teaching.school</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="city"/>
+                <field name="is_other"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_teaching_school" model="ir.actions.act_window">
+        <field name="name">Schools</field>
+        <field name="res_model">teaching.school</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Add the students' schools</p><p>Keep one school marked "Is Other" for schools not in the list.</p></field>
+    </record>
+</odoo>

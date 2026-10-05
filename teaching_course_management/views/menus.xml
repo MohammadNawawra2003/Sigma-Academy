@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_teaching_root" name="Teaching" sequence="5"
+              web_icon="teaching_course_management,static/description/icon.png"
+              groups="group_teaching_instructor"/>
+
+    <menuitem id="menu_teaching_sessions" name="Sessions" parent="menu_teaching_root" sequence="10"/>
+    <menuitem id="menu_teaching_sessions_all" name="All Sessions" parent="menu_teaching_sessions" action="action_teaching_sessions" sequence="10"/>
+    <menuitem id="menu_teaching_sessions_pending" name="Pending Approval" parent="menu_teaching_sessions" action="action_teaching_sessions_pending" sequence="20"/>
+    <menuitem id="menu_teaching_sessions_to_bill" name="To Bill" parent="menu_teaching_sessions" action="action_teaching_sessions_to_bill" sequence="30"/>
+    <menuitem id="menu_teaching_sessions_waitlist" name="Waitlist" parent="menu_teaching_sessions" action="action_teaching_sessions_waitlist" sequence="40"/>
+
+    <menuitem id="menu_teaching_schedule" name="My Schedule" parent="menu_teaching_root" sequence="20"/>
+    <menuitem id="menu_teaching_my_availability" name="My Availability" parent="menu_teaching_schedule" action="action_teaching_my_availability" sequence="10"/>
+    <menuitem id="menu_teaching_working_hours" name="Working Hours" parent="menu_teaching_schedule" action="hr.open_view_employee_list_my" sequence="20"/>
+
+    <menuitem id="menu_teaching_students_root" name="Students" parent="menu_teaching_root" sequence="30"/>
+    <menuitem id="menu_teaching_students" name="Students" parent="menu_teaching_students_root" action="action_teaching_students" sequence="10"/>
+    <menuitem id="menu_teaching_guardians" name="Guardians" parent="menu_teaching_students_root" action="action_teaching_guardians" sequence="20"/>
+
+    <menuitem id="menu_teaching_courses" name="Courses" parent="menu_teaching_root" action="action_teaching_course" sequence="40"/>
+
+    <menuitem id="menu_teaching_invoicing" name="Invoicing" parent="menu_teaching_root" sequence="50"/>
+    <menuitem id="menu_teaching_invoices" name="Invoices" parent="menu_teaching_invoicing" action="account.action_move_out_invoice_type" sequence="10"/>
+    <menuitem id="menu_teaching_payments" name="Payments" parent="menu_teaching_invoicing" action="account.action_account_payments" sequence="20"/>
+    <menuitem id="menu_teaching_followup" name="Follow-up" parent="menu_teaching_invoicing" action="account_reports.action_account_reports_customer_statements" sequence="30"/>
+
+    <menuitem id="menu_teaching_reporting" name="Reporting" parent="menu_teaching_root" sequence="60"/>
+    <menuitem id="menu_teaching_sessions_analysis" name="Sessions Analysis" parent="menu_teaching_reporting" action="action_teaching_sessions_analysis" sequence="10"/>
+    <menuitem id="menu_teaching_outstanding" name="Outstanding" parent="menu_teaching_reporting" action="action_teaching_outstanding" sequence="20"/>
+    <menuitem id="menu_teaching_income" name="Income" parent="menu_teaching_reporting" action="action_teaching_income" sequence="30" groups="group_teaching_admin"/>
+
+    <menuitem id="menu_teaching_config" name="Configuration" parent="menu_teaching_root" sequence="90" groups="group_teaching_admin"/>
+    <menuitem id="menu_teaching_subjects" name="Subjects" parent="menu_teaching_config" action="action_teaching_subject" sequence="10"/>
+    <menuitem id="menu_teaching_curricula" name="Curricula" parent="menu_teaching_config" action="action_teaching_curriculum" sequence="20"/>
+    <menuitem id="menu_teaching_grades" name="Grades" parent="menu_teaching_config" action="action_teaching_grade" sequence="30"/>
+    <menuitem id="menu_teaching_schools" name="Schools" parent="menu_teaching_config" action="action_teaching_school" sequence="40"/>
+    <menuitem id="menu_teaching_session_types" name="Session Types &amp; Prices" parent="menu_teaching_config" action="action_teaching_session_types" sequence="50"/>
+    <menuitem id="menu_teaching_announcements" name="Announcements" parent="menu_teaching_config" action="action_teaching_announcements" sequence="60"/>
+    <menuitem id="menu_teaching_settings" name="Settings" parent="menu_teaching_config" action="action_teaching_settings" sequence="90"/>
+</odoo>

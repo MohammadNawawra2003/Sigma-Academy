@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_teaching" model="ir.ui.view">
+        <field name="name">res.config.settings.form.teaching</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Teaching" string="Teaching" name="teaching_course_management" groups="teaching_course_management.group_teaching_admin">
+                    <block title="Booking rules" name="teaching_booking">
+                        <setting string="Gap between sessions" help="Minutes kept free after another student's session. Back to back for the same student is allowed.">
+                            <field name="teaching_gap_minutes"/>
+                        </setting>
+                        <setting string="Same-day cut-off" help="Same-day website booking closes at this hour. The back office can still book.">
+                            <field name="teaching_cutoff_hour" widget="float_time"/>
+                        </setting>
+                        <setting string="Default group capacity" help="Used for group session types that do not manage capacity themselves.">
+                            <field name="teaching_group_capacity"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_teaching_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'teaching_course_management', 'bin_size': False}</field>
+    </record>
+</odoo>

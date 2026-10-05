@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Booking form: pick the student (own partner or a child) and optionally book 2 hours back to back -->
+    <template id="appointment_form_teaching" inherit_id="appointment.appointment_form" name="Teaching: student and 2 hours">
+        <xpath expr="//input[@name='asked_capacity']" position="after">
+            <t t-if="appointment_type.teaching_product_id and not request.env.user._is_public()">
+                <t t-set="teaching_me" t-value="request.env.user.partner_id.sudo()"/>
+                <t t-set="teaching_students" t-value="teaching_me if teaching_me.is_student else teaching_me.child_ids.filtered('is_student')"/>
+                <div class="row mb-4" t-if="teaching_students">
+                    <label class="col-sm-3 col-form-label fw-normal" for="teaching_student_id">Student*</label>
+                    <div class="col-sm">
+                        <select name="teaching_student_id" class="form-select" required="1">
+                            <option t-foreach="teaching_students" t-as="student" t-att-value="student.id" t-out="student.name"/>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-4" t-if="not appointment_type.teaching_is_group">
+                    <div class="col-sm-3"/>
+                    <div class="col-sm">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="teaching_two_hours" name="teaching_two_hours" value="1"/>
+                            <label class="form-check-label" for="teaching_two_hours">2 hours — two sessions back to back</label>
+                        </div>
+                        <small class="text-muted">The next published hour must also be free. Nothing is confirmed automatically: Sari approves every booking.</small>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="appointment_info_teaching" inherit_id="appointment.appointment_info" name="Teaching: 2 hours unavailable">
+        <xpath expr="//div[hasclass('o_appointment_info_main')]/h4" position="after">
+            <div t-if="state == 'teaching-two-hours'" class="alert alert-warning" role="alert">
+                The next hour is not free, so the 2-hour booking was not made. Nothing was booked.
+                Book one hour, or pick another start time.
+            </div>
+        </xpath>
+    </template>
+
+    <!-- The meeting link is shared only once the academy confirms the booking -->
+    <template id="appointment_validated_teaching" inherit_id="appointment.appointment_validated" name="Teaching: hide link while pending">
+        <xpath expr="//div[@t-if='event.videocall_location']" position="attributes">
+            <attribute name="t-if">event.videocall_location and not (event.is_teaching and event.appointment_status == 'request')</attribute>
+        </xpath>
+        <xpath expr="//div[@t-elif='event.videocall_redirection']" position="attributes">
+            <attribute name="t-elif">event.videocall_redirection and not (event.is_teaching and event.appointment_status == 'request')</attribute>
+        </xpath>
+    </template>
+</odoo>

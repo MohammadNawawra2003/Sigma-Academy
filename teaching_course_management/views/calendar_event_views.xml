@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="calendar_event_view_list_teaching" model="ir.ui.view">
+        <field name="name">calendar.event.list.teaching</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Sessions" default_order="start desc" sample="1">
+                <field name="start" string="Start"/>
+                <field name="teaching_student_ids" widget="many2many_tags"/>
+                <field name="subject_id"/>
+                <field name="appointment_type_id" string="Type"/>
+                <field name="user_id" string="Instructor" optional="hide"/>
+                <field name="appointment_status" string="Status" widget="badge"
+                       decoration-info="appointment_status == 'request'"
+                       decoration-success="appointment_status in ('booked', 'attended')"
+                       decoration-warning="appointment_status in ('no_show', 'late_cancelled')"
+                       decoration-muted="appointment_status == 'cancelled'"/>
+                <field name="teaching_actual_duration" string="Actual" widget="float_time" optional="show"/>
+                <field name="teaching_currency_id" column_invisible="1"/>
+                <field name="teaching_amount" sum="Total" optional="show"/>
+                <field name="teaching_invoice_ids" widget="many2many_tags" optional="show"/>
+                <button name="action_teaching_approve" type="object" string="Approve" icon="fa-check" class="btn-link text-success"
+                        invisible="appointment_status != 'request'"/>
+                <button name="action_teaching_reject" type="object" string="Reject" icon="fa-times" class="btn-link text-danger"
+                        invisible="appointment_status != 'request'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="calendar_event_view_list_teaching_waitlist" model="ir.ui.view">
+        <field name="name">calendar.event.list.teaching.waitlist</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">101</field>
+        <field name="arch" type="xml">
+            <list string="Waitlist">
+                <field name="start"/>
+                <field name="appointment_type_id" string="Type"/>
+                <field name="teaching_student_ids" widget="many2many_tags"/>
+                <field name="teaching_seats_taken"/>
+                <field name="teaching_capacity"/>
+                <field name="teaching_waitlist_ids" widget="many2many_tags"/>
+                <button name="action_teaching_promote" type="object" string="Promote" icon="fa-arrow-up" class="btn-link"
+                        invisible="teaching_seats_taken &gt;= teaching_capacity"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="calendar_event_view_kanban_teaching" model="ir.ui.view">
+        <field name="name">calendar.event.kanban.teaching</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="appointment_status" group_create="0" group_delete="0" group_edit="0" records_draggable="0" sample="1">
+                <field name="teaching_currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <field name="teaching_student_ids" widget="many2many_tags" class="fw-bold"/>
+                        <div class="text-muted"><field name="subject_id"/> · <field name="appointment_type_id"/></div>
+                        <field name="start"/>
+                        <footer>
+                            <field name="teaching_amount" widget="monetary" class="ms-auto"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="calendar_event_view_calendar_teaching" model="ir.ui.view">
+        <field name="name">calendar.event.calendar.teaching</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <calendar string="Sessions" date_start="start" date_stop="stop" date_delay="duration" all_day="allday"
+                      mode="week" color="appointment_status" event_open_popup="1" quick_create="0">
+                <field name="teaching_student_ids" widget="many2many_tags"/>
+                <field name="subject_id"/>
+                <field name="appointment_type_id"/>
+                <field name="appointment_status"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="calendar_event_view_pivot_teaching" model="ir.ui.view">
+        <field name="name">calendar.event.pivot.teaching</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <pivot string="Sessions Analysis" sample="1">
+                <field name="appointment_status" type="row"/>
+                <field name="subject_id" type="col"/>
+                <field name="teaching_actual_duration" type="measure" widget="float_time"/>
+                <field name="teaching_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="calendar_event_view_graph_teaching" model="ir.ui.view">
+        <field name="name">calendar.event.graph.teaching</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <graph string="Sessions Analysis" sample="1">
+                <field name="start" interval="month"/>
+                <field name="appointment_type_id"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="calendar_event_view_search_teaching" model="ir.ui.view">
+        <field name="name">calendar.event.search.teaching</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <search string="Sessions">
+                <field name="teaching_student_ids" string="Student"/>
+                <field name="subject_id"/>
+                <field name="appointment_type_id" string="Type"/>
+                <field name="teaching_course_id"/>
+                <field name="user_id" string="Instructor"/>
+                <filter name="my_sessions" string="My Sessions" domain="[('user_id', '=', uid)]"/>
+                <separator/>
+                <filter name="today" string="Today" domain="[('start', '&gt;=', 'today'), ('start', '&lt;', 'today +1d')]"/>
+                <filter name="this_week" string="This Week" domain="[('start', '&gt;=', 'today -1w'), ('start', '&lt;', 'today +1w')]"/>
+                <filter name="upcoming" string="Upcoming" domain="[('start', '&gt;=', 'now')]"/>
+                <separator/>
+                <filter name="pending" string="Pending Approval" domain="[('appointment_status', '=', 'request')]"/>
+                <filter name="to_bill" string="To Bill" domain="[('appointment_status', 'in', ('attended', 'no_show', 'late_cancelled')), ('teaching_duration_confirmed', '=', False)]"/>
+                <filter name="uninvoiced" string="Uninvoiced" domain="[('teaching_invoice_ids', '=', False), ('teaching_billing', '=', 'bill')]"/>
+                <filter name="no_show" string="No Show" domain="[('appointment_status', '=', 'no_show')]"/>
+                <filter name="late_cancelled" string="Late Cancelled" domain="[('appointment_status', '=', 'late_cancelled')]"/>
+                <separator/>
+                <filter name="archived" string="Cancelled (archived)" domain="[('active', '=', False)]"/>
+                <group name="groupby">
+                    <filter name="group_student" string="Student" context="{'group_by': 'teaching_student_ids'}"/>
+                    <filter name="group_instructor" string="Instructor" context="{'group_by': 'user_id'}"/>
+                    <filter name="group_subject" string="Subject" context="{'group_by': 'subject_id'}"/>
+                    <filter name="group_type" string="Type" context="{'group_by': 'appointment_type_id'}"/>
+                    <filter name="group_status" string="Status" context="{'group_by': 'appointment_status'}"/>
+                    <filter name="group_course" string="Course" context="{'group_by': 'teaching_course_id'}"/>
+                    <filter name="group_month" string="Month" context="{'group_by': 'start:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="calendar_event_view_form_teaching" model="ir.ui.view">
+        <field name="name">calendar.event.form.teaching</field>
+        <field name="model">calendar.event</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <form string="Session">
+                <field name="is_teaching" invisible="1"/>
+                <field name="teaching_is_group" invisible="1"/>
+                <field name="teaching_currency_id" invisible="1"/>
+                <field name="teaching_duration_confirmed" invisible="1"/>
+                <field name="teaching_invoice_count" invisible="1"/>
+                <header>
+                    <button name="action_teaching_approve" type="object" string="Approve" class="btn-primary"
+                            invisible="appointment_status != 'request'" data-hotkey="a"/>
+                    <button name="action_teaching_reject" type="object" string="Reject"
+                            invisible="appointment_status != 'request'"/>
+                    <button name="action_set_appointment_attended" type="object" string="Mark Attended" class="btn-primary"
+                            invisible="appointment_status != 'booked'"/>
+                    <button name="action_set_appointment_no_show" type="object" string="No Show"
+                            invisible="appointment_status != 'booked'"/>
+                    <button name="action_teaching_cancel" type="object" string="Cancel"
+                            invisible="appointment_status not in ('request', 'booked')"
+                            confirm="Cancel this session? After midnight the night before, it becomes Late Cancelled and is billable."/>
+                    <button name="action_teaching_convert_group" type="object" string="Convert to Group"
+                            invisible="appointment_status != 'booked' or teaching_is_group or teaching_course_id"/>
+                    <button name="action_teaching_bill" type="object" string="Confirm Duration &amp; Bill" class="btn-primary"
+                            invisible="appointment_status not in ('attended', 'no_show', 'late_cancelled') or teaching_duration_confirmed"/>
+                    <button name="action_teaching_waive" type="object" string="Waive Charge"
+                            invisible="appointment_status not in ('no_show', 'late_cancelled') or teaching_duration_confirmed"/>
+                    <field name="appointment_status" widget="statusbar" statusbar_visible="request,booked,attended"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_teaching_invoices" type="object" class="oe_stat_button" icon="fa-file-text-o"
+                                invisible="not teaching_invoice_count">
+                            <field name="teaching_invoice_count" widget="statinfo" string="Invoices"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Cancelled" bg_color="text-bg-secondary" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Layan - Physics"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="teaching_student_ids" widget="many2many_tags" options="{'no_create': True}"
+                                   readonly="teaching_invoice_count"/>
+                            <field name="user_id" string="Instructor" required="1"/>
+                            <field name="subject_id" options="{'no_create': True}"/>
+                            <field name="appointment_type_id" string="Type" required="1" options="{'no_create': True}"
+                                   domain="[('teaching_product_id', '!=', False)]" readonly="teaching_invoice_count"/>
+                            <field name="teaching_course_id" invisible="not teaching_course_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="teaching_mode" widget="radio" options="{'horizontal': true}"/>
+                            <field name="start" string="Start"/>
+                            <field name="stop" invisible="1"/>
+                            <field name="allday" invisible="1"/>
+                            <field name="duration" string="Planned Duration" widget="float_time"/>
+                            <field name="videocall_location" string="Meeting URL" widget="url"
+                                   invisible="appointment_status == 'request' or teaching_mode == 'onsite'"/>
+                            <div colspan="2" class="text-muted" invisible="appointment_status != 'request'">
+                                The meeting link is shared when the booking is approved.
+                            </div>
+                            <div colspan="2" class="text-muted" invisible="teaching_mode != 'onsite'">
+                                No meeting link is needed for an on-site session.
+                            </div>
+                            <field name="teaching_cancel_deadline" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Session" name="session">
+                            <group>
+                                <field name="teaching_goal" readonly="1" placeholder="Entered by the student when booking"/>
+                                <field name="teaching_notes" placeholder="Visible to the student and guardian in the portal."/>
+                            </group>
+                        </page>
+                        <page string="Attendance &amp; Billing" name="billing">
+                            <group>
+                                <group>
+                                    <field name="teaching_actual_duration" widget="float_time" readonly="teaching_invoice_count"/>
+                                    <field name="teaching_duration_confirmed"/>
+                                    <field name="teaching_billing" readonly="teaching_invoice_count or teaching_duration_confirmed"/>
+                                </group>
+                                <group>
+                                    <field name="teaching_price_unit" readonly="teaching_invoice_count"/>
+                                    <field name="teaching_amount"/>
+                                    <field name="teaching_invoice_ids" widget="many2many_tags"/>
+                                </group>
+                            </group>
+                            <div class="text-muted">Amount = price per hour × actual hours × number of students. No invoice before the duration is confirmed.</div>
+                        </page>
+                        <page string="Materials" name="materials">
+                            <p class="text-muted">Attach materials with the paperclip in the chatter. Attachments are visible to the student in the portal.</p>
+                        </page>
+                        <page string="Waitlist" name="waitlist" invisible="not teaching_is_group">
+                            <group>
+                                <label for="teaching_seats_taken" string="Seats"/>
+                                <div><field name="teaching_seats_taken" class="oe_inline"/> / <field name="teaching_capacity" class="oe_inline"/></div>
+                            </group>
+                            <field name="teaching_waitlist_ids" options="{'no_create': True}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="parent_id" string="Guardian"/>
+                                    <field name="phone"/>
+                                    <button name="action_teaching_promote_waitlist" type="object" string="Promote" icon="fa-arrow-up"
+                                            context="{'teaching_event_id': parent.id}"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Attendees" name="attendees">
+                            <field name="partner_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_teaching_sessions" model="ir.actions.act_window">
+        <field name="name">Sessions</field>
+        <field name="res_model">calendar.event</field>
+        <field name="view_mode">list,kanban,calendar,pivot,graph,form</field>
+        <field name="domain">[('is_teaching', '=', True)]</field>
+        <field name="context" eval="{'default_appointment_type_id': ref('appointment_type_one_to_one'), 'default_appointment_status': 'booked'}"/>
+        <field name="search_view_id" ref="calendar_event_view_search_teaching"/>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('calendar_event_view_list_teaching')}),
+            Command.create({'view_mode': 'kanban', 'view_id': ref('calendar_event_view_kanban_teaching')}),
+            Command.create({'view_mode': 'calendar', 'view_id': ref('calendar_event_view_calendar_teaching')}),
+            Command.create({'view_mode': 'pivot', 'view_id': ref('calendar_event_view_pivot_teaching')}),
+            Command.create({'view_mode': 'graph', 'view_id': ref('calendar_event_view_graph_teaching')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('calendar_event_view_form_teaching')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No sessions yet</p><p>Students book published slots on the website; you can also book a session here.</p></field>
+    </record>
+
+    <record id="action_teaching_sessions_pending" model="ir.actions.act_window">
+        <field name="name">Pending Approval</field>
+        <field name="res_model">calendar.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_teaching', '=', True), ('appointment_status', '=', 'request')]</field>
+        <field name="context">{'create': False}</field>
+        <field name="search_view_id" ref="calendar_event_view_search_teaching"/>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('calendar_event_view_list_teaching')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('calendar_event_view_form_teaching')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Nothing to approve</p><p>New booking requests from students and guardians appear here with Approve and Reject buttons.</p></field>
+    </record>
+
+    <record id="action_teaching_sessions_to_bill" model="ir.actions.act_window">
+        <field name="name">To Bill</field>
+        <field name="res_model">calendar.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_teaching', '=', True), ('appointment_status', 'in', ('attended', 'no_show', 'late_cancelled')), ('teaching_duration_confirmed', '=', False)]</field>
+        <field name="context">{'create': False}</field>
+        <field name="search_view_id" ref="calendar_event_view_search_teaching"/>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('calendar_event_view_list_teaching')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('calendar_event_view_form_teaching')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Nothing to bill</p><p>Sessions marked Attended, No Show or Late Cancelled wait here until you confirm the duration and bill, or waive the charge.</p></field>
+    </record>
+
+    <record id="action_teaching_sessions_waitlist" model="ir.actions.act_window">
+        <field name="name">Waitlist</field>
+        <field name="res_model">calendar.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_teaching', '=', True), ('teaching_waitlist_ids', '!=', False)]</field>
+        <field name="context">{'create': False}</field>
+        <field name="search_view_id" ref="calendar_event_view_search_teaching"/>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('calendar_event_view_list_teaching_waitlist')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('calendar_event_view_form_teaching')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Nobody is waiting</p><p>When a group session is full, add students on its Waitlist tab. Promote them when a seat frees up.</p></field>
+    </record>
+
+    <record id="action_teaching_sessions_analysis" model="ir.actions.act_window">
+        <field name="name">Sessions Analysis</field>
+        <field name="res_model">calendar.event</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('is_teaching', '=', True)]</field>
+        <field name="context">{'create': False}</field>
+        <field name="search_view_id" ref="calendar_event_view_search_teaching"/>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'pivot', 'view_id': ref('calendar_event_view_pivot_teaching')}),
+            Command.create({'view_mode': 'graph', 'view_id': ref('calendar_event_view_graph_teaching')}),
+            Command.create({'view_mode': 'list', 'view_id': ref('calendar_event_view_list_teaching')})]"/>
+    </record>
+</odoo>

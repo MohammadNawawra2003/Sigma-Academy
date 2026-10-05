@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="teaching_session_reject_view_form" model="ir.ui.view">
+        <field name="name">teaching.session.reject.form</field>
+        <field name="model">teaching.session.reject</field>
+        <field name="arch" type="xml">
+            <form string="Reject Booking">
+                <field name="event_id" invisible="1"/>
+                <p>The student and guardian receive this reason by email. The slot becomes free again.</p>
+                <field name="reason" placeholder="e.g. I am not available at this time, please pick another slot."/>
+                <footer>
+                    <button name="action_confirm" type="object" string="Reject" class="btn-primary" data-hotkey="q"/>
+                    <button special="cancel" string="Discard" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="teaching_convert_group_view_form" model="ir.ui.view">
+        <field name="name">teaching.convert.group.form</field>
+        <field name="model">teaching.convert.group</field>
+        <field name="arch" type="xml">
+            <form string="Convert to Group">
+                <field name="event_id" invisible="1"/>
+                <p>The session becomes a Group session. Every student is billed at the group rate when the duration is confirmed. No credit note is created.</p>
+                <group>
+                    <field name="student_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Convert" class="btn-primary" data-hotkey="q"/>
+                    <button special="cancel" string="Discard" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="teaching_course_enrol_view_form" model="ir.ui.view">
+        <field name="name">teaching.course.enrol.form</field>
+        <field name="model">teaching.course.enrol</field>
+        <field name="arch" type="xml">
+            <form string="Enrol Student">
+                <field name="course_id" invisible="1"/>
+                <p>The student is added to the course and to every future session that is not invoiced yet.</p>
+                <group>
+                    <field name="partner_id" options="{'no_create': True}"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Enrol" class="btn-primary" data-hotkey="q"/>
+                    <button special="cancel" string="Discard" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

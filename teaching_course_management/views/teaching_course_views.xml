@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="teaching_course_view_list" model="ir.ui.view">
+        <field name="name">teaching.course.list</field>
+        <field name="model">teaching.course</field>
+        <field name="arch" type="xml">
+            <list string="Courses" sample="1">
+                <field name="name"/>
+                <field name="subject_id"/>
+                <field name="curriculum_id"/>
+                <field name="grade_id"/>
+                <field name="session_count" string="Sessions"/>
+                <field name="seats_taken" string="Seats Taken"/>
+                <field name="capacity"/>
+                <field name="price_per_session"/>
+                <field name="state" widget="badge" decoration-info="state == 'confirmed'" decoration-success="state == 'running'" decoration-muted="state in ('done', 'cancelled')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="teaching_course_view_form" model="ir.ui.view">
+        <field name="name">teaching.course.form</field>
+        <field name="model">teaching.course</field>
+        <field name="arch" type="xml">
+            <form string="Course">
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_generate_sessions" type="object" string="Generate Sessions" class="btn-primary"
+                            invisible="state != 'confirmed' or session_count"/>
+                    <button name="action_enrol" type="object" string="Enrol Student"
+                            invisible="state in ('done', 'cancelled') or seats_available &lt;= 0"/>
+                    <button name="action_publish_announcement" type="object" string="Publish Announcement"
+                            invisible="state in ('draft', 'cancelled')" groups="teaching_course_management.group_teaching_admin"/>
+                    <button name="action_done" type="object" string="Mark Done" invisible="state != 'running'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('done', 'cancelled')"
+                            confirm="Cancel the course? Future sessions that are not invoiced are cancelled."/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,running,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sessions" type="object" class="oe_stat_button" icon="fa-calendar">
+                            <field name="session_count" widget="statinfo" string="Sessions"/>
+                        </button>
+                        <button name="action_view_students" type="object" class="oe_stat_button" icon="fa-users">
+                            <field name="seats_taken" widget="statinfo" string="Students"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. IGCSE Maths Revision – Winter 2026"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="subject_id" options="{'no_create': True}"/>
+                            <field name="curriculum_id" options="{'no_create': True}"/>
+                            <field name="grade_id" options="{'no_create': True}"/>
+                            <field name="instructor_id"/>
+                        </group>
+                        <group>
+                            <field name="appointment_type_id" options="{'no_create': True}" readonly="session_count"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="price_per_session"/>
+                            <field name="capacity"/>
+                            <label for="seats_taken" string="Seats Taken / Available"/>
+                            <div><field name="seats_taken" class="oe_inline"/> / <field name="seats_available" class="oe_inline"/></div>
+                        </group>
+                    </group>
+                    <group string="Repeat">
+                        <group>
+                            <label for="mon" string="Days"/>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span><field name="mon" readonly="session_count" nolabel="1"/> Mon</span>
+                                <span><field name="tue" readonly="session_count" nolabel="1"/> Tue</span>
+                                <span><field name="wed" readonly="session_count" nolabel="1"/> Wed</span>
+                                <span><field name="thu" readonly="session_count" nolabel="1"/> Thu</span>
+                                <span><field name="fri" readonly="session_count" nolabel="1"/> Fri</span>
+                                <span><field name="sat" readonly="session_count" nolabel="1"/> Sat</span>
+                                <span><field name="sun" readonly="session_count" nolabel="1"/> Sun</span>
+                            </div>
+                            <field name="start_hour" widget="float_time" readonly="session_count"/>
+                            <field name="duration" widget="float_time" readonly="session_count"/>
+                        </group>
+                        <group>
+                            <field name="start_date" readonly="session_count"/>
+                            <field name="end_type" widget="radio" readonly="session_count"/>
+                            <field name="count" invisible="end_type != 'count'" readonly="session_count"/>
+                            <field name="until" invisible="end_type != 'end_date'" required="end_type == 'end_date'" readonly="session_count"/>
+                            <field name="schedule_summary"/>
+                        </group>
+                    </group>
+                    <div class="text-muted" invisible="not session_count">
+                        Already generated. Each date is its own session; change or cancel one on its own session form.
+                    </div>
+                    <notebook>
+                        <page string="Sessions" name="sessions">
+                            <field name="session_ids" readonly="1" context="{'active_test': False}">
+                                <list>
+                                    <field name="start"/>
+                                    <field name="appointment_status" widget="badge"/>
+                                    <field name="teaching_student_ids" widget="many2many_tags"/>
+                                    <field name="teaching_currency_id" column_invisible="1"/>
+                                    <field name="teaching_amount" sum="Total"/>
+                                </list>
+                            </field>
+                            <div class="text-muted" invisible="session_count">No sessions yet. Use Generate Sessions to create the series.</div>
+                        </page>
+                        <page string="Enrolled Students" name="students">
+                            <field name="student_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="parent_id" string="Guardian"/>
+                                    <field name="school_id"/>
+                                    <field name="grade_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Description" name="description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                    <div class="text-muted small">Withdrawal is handled manually by administration. No certificate, progress tracking or quiz.</div>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="teaching_course_view_search" model="ir.ui.view">
+        <field name="name">teaching.course.search</field>
+        <field name="model">teaching.course</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="subject_id"/>
+                <field name="student_ids" string="Student"/>
+                <filter name="active_courses" string="Open" domain="[('state', 'in', ('draft', 'confirmed', 'running'))]"/>
+                <group name="groupby">
+                    <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
+                    <filter name="group_subject" string="Subject" context="{'group_by': 'subject_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_teaching_course" model="ir.actions.act_window">
+        <field name="name">Courses</field>
+        <field name="res_model">teaching.course</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Create your first course</p><p>Pick the days and time; Generate Sessions creates every date as its own session.</p></field>
+    </record>
+</odoo>

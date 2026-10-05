@@ -1,0 +1,15 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_teaching_subject_user,teaching.subject user,model_teaching_subject,base.group_user,1,0,0,0
+access_teaching_subject_admin,teaching.subject admin,model_teaching_subject,group_teaching_admin,1,1,1,1
+access_teaching_curriculum_user,teaching.curriculum user,model_teaching_curriculum,base.group_user,1,0,0,0
+access_teaching_curriculum_admin,teaching.curriculum admin,model_teaching_curriculum,group_teaching_admin,1,1,1,1
+access_teaching_grade_user,teaching.grade user,model_teaching_grade,base.group_user,1,0,0,0
+access_teaching_grade_admin,teaching.grade admin,model_teaching_grade,group_teaching_admin,1,1,1,1
+access_teaching_school_user,teaching.school user,model_teaching_school,base.group_user,1,0,0,0
+access_teaching_school_admin,teaching.school admin,model_teaching_school,group_teaching_admin,1,1,1,1
+access_teaching_course_user,teaching.course user,model_teaching_course,base.group_user,1,0,0,0
+access_teaching_course_instructor,teaching.course instructor,model_teaching_course,group_teaching_instructor,1,1,1,0
+access_teaching_course_admin,teaching.course admin,model_teaching_course,group_teaching_admin,1,1,1,1
+access_teaching_session_reject,teaching.session.reject,model_teaching_session_reject,group_teaching_instructor,1,1,1,1
+access_teaching_convert_group,teaching.convert.group,model_teaching_convert_group,group_teaching_instructor,1,1,1,1
+access_teaching_course_enrol,teaching.course.enrol,model_teaching_course_enrol,group_teaching_instructor,1,1,1,1

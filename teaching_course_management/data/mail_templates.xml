@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mail_template_session_confirmed" model="mail.template">
+            <field name="name">Teaching: Session confirmed</field>
+            <field name="model_id" ref="calendar.model_calendar_event"/>
+            <field name="subject">Confirmed: {{ object.name }}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div>
+    <p>Hello,</p>
+    <p>Your session is <strong>confirmed</strong>.</p>
+    <ul>
+        <li>Session: <t t-out="object.subject_id.name or ''"/> <t t-out="object.appointment_type_id.name or ''"/></li>
+        <li>Students: <t t-out="', '.join(object.teaching_student_ids.mapped('name'))"/></li>
+        <li>When: <t t-out="object.display_time or ''"/></li>
+        <li t-if="object.teaching_mode == 'online' and object.videocall_location">Meeting link: <a t-att-href="object.videocall_location" t-out="object.videocall_location"/></li>
+        <li t-if="object.teaching_mode == 'onsite'">On-site session.</li>
+    </ul>
+    <p>Free cancellation until midnight the night before. After that the session is charged.</p>
+    <p>Sigma Academy</p>
+</div>
+            </field>
+        </record>
+
+        <record id="mail_template_session_rejected" model="mail.template">
+            <field name="name">Teaching: Booking rejected</field>
+            <field name="model_id" ref="calendar.model_calendar_event"/>
+            <field name="subject">Booking not accepted: {{ object.name }}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div>
+    <p>Hello,</p>
+    <p>Your booking request for <t t-out="object.display_time or ''"/> could not be accepted.</p>
+    <p t-if="ctx.get('teaching_reject_reason')"><strong>Reason:</strong> <t t-out="ctx.get('teaching_reject_reason')"/></p>
+    <p>Please pick another slot on the booking page.</p>
+    <p>Sigma Academy</p>
+</div>
+            </field>
+        </record>
+    </data>
+</odoo>

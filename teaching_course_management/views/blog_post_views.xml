@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="blog_post_view_form_teaching" model="ir.ui.view">
+        <field name="name">blog.post.form.teaching</field>
+        <field name="model">blog.post</field>
+        <field name="inherit_id" ref="website_blog.view_blog_post_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='blog_id']" position="after">
+                <field name="teaching_course_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_teaching_announcements" model="ir.actions.act_window">
+        <field name="name">Announcements</field>
+        <field name="res_model">blog.post</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain" eval="[('blog_id', '=', ref('blog_announcements'))]"/>
+        <field name="context" eval="{'default_blog_id': ref('blog_announcements')}"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No announcements yet</p><p>Publish one from a course (Publish Announcement) or create it here. Published posts are public on the website.</p></field>
+    </record>
+</odoo>

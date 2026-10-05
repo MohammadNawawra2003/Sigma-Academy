@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Minutes bill exactly: 20 min = 0.3333 h -->
+    <record id="uom.decimal_product_uom" model="decimal.precision">
+        <field name="digits">4</field>
+    </record>
+
+    <data noupdate="1">
+        <!-- One service product per session type; price per hour (per student for group types), no tax -->
+        <record id="product_session_one_to_one" model="product.product">
+            <field name="name">1-to-1 Session</field>
+            <field name="type">service</field>
+            <field name="list_price">150</field>
+            <field name="uom_id" ref="uom.product_uom_hour"/>
+            <field name="taxes_id" eval="[Command.clear()]"/>
+            <field name="supplier_taxes_id" eval="[Command.clear()]"/>
+            <field name="purchase_ok" eval="False"/>
+        </record>
+        <record id="product_session_group" model="product.product">
+            <field name="name">Group Session</field>
+            <field name="type">service</field>
+            <field name="list_price">100</field>
+            <field name="uom_id" ref="uom.product_uom_hour"/>
+            <field name="taxes_id" eval="[Command.clear()]"/>
+            <field name="supplier_taxes_id" eval="[Command.clear()]"/>
+            <field name="purchase_ok" eval="False"/>
+        </record>
+        <record id="product_session_review" model="product.product">
+            <field name="name">Review Session</field>
+            <field name="type">service</field>
+            <field name="list_price">100</field>
+            <field name="uom_id" ref="uom.product_uom_hour"/>
+            <field name="taxes_id" eval="[Command.clear()]"/>
+            <field name="supplier_taxes_id" eval="[Command.clear()]"/>
+            <field name="purchase_ok" eval="False"/>
+        </record>
+        <record id="product_session_course" model="product.product">
+            <field name="name">Live Course Session</field>
+            <field name="type">service</field>
+            <field name="list_price">70</field>
+            <field name="uom_id" ref="uom.product_uom_hour"/>
+            <field name="taxes_id" eval="[Command.clear()]"/>
+            <field name="supplier_taxes_id" eval="[Command.clear()]"/>
+            <field name="purchase_ok" eval="False"/>
+        </record>
+
+        <record id="appointment_question_goal" model="appointment.question">
+            <field name="name">What do you want from this lesson?</field>
+            <field name="question_type">text</field>
+            <field name="question_required" eval="False"/>
+        </record>
+
+        <!-- Session types = appointment types. Flexible schedule: the instructor publishes dated slots. -->
+        <record id="appointment_type_one_to_one" model="appointment.type">
+            <field name="name">1-to-1 Session</field>
+            <field name="sequence">1</field>
+            <field name="category">custom</field>
+            <field name="schedule_based_on">users</field>
+            <field name="appointment_tz">Asia/Hebron</field>
+            <field name="appointment_duration">1.0</field>
+            <field name="auto_confirm" eval="False"/>
+            <field name="min_schedule_hours">0</field>
+            <field name="min_cancellation_hours">0</field>
+            <field name="max_schedule_days">365</field>
+            <field name="event_videocall_source">discuss</field>
+            <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
+            <field name="question_ids" eval="[Command.set([ref('appointment_question_goal')])]"/>
+            <field name="teaching_product_id" ref="product_session_one_to_one"/>
+            <field name="is_published" eval="True"/>
+        </record>
+        <record id="appointment_type_group" model="appointment.type">
+            <field name="name">Group Session</field>
+            <field name="sequence">2</field>
+            <field name="category">custom</field>
+            <field name="schedule_based_on">users</field>
+            <field name="appointment_tz">Asia/Hebron</field>
+            <field name="appointment_duration">1.0</field>
+            <field name="auto_confirm" eval="False"/>
+            <field name="manage_capacity" eval="True"/>
+            <field name="user_capacity">5</field>
+            <field name="min_schedule_hours">0</field>
+            <field name="min_cancellation_hours">0</field>
+            <field name="max_schedule_days">365</field>
+            <field name="event_videocall_source">discuss</field>
+            <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
+            <field name="question_ids" eval="[Command.set([ref('appointment_question_goal')])]"/>
+            <field name="teaching_product_id" ref="product_session_group"/>
+            <field name="teaching_is_group" eval="True"/>
+            <field name="is_published" eval="True"/>
+        </record>
+        <record id="appointment_type_review" model="appointment.type">
+            <field name="name">Review Session</field>
+            <field name="sequence">3</field>
+            <field name="category">custom</field>
+            <field name="schedule_based_on">users</field>
+            <field name="appointment_tz">Asia/Hebron</field>
+            <field name="appointment_duration">1.0</field>
+            <field name="auto_confirm" eval="False"/>
+            <field name="manage_capacity" eval="True"/>
+            <field name="user_capacity">5</field>
+            <field name="min_schedule_hours">0</field>
+            <field name="min_cancellation_hours">0</field>
+            <field name="max_schedule_days">365</field>
+            <field name="event_videocall_source">discuss</field>
+            <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
+            <field name="question_ids" eval="[Command.set([ref('appointment_question_goal')])]"/>
+            <field name="teaching_product_id" ref="product_session_review"/>
+            <field name="teaching_is_group" eval="True"/>
+            <field name="is_published" eval="True"/>
+        </record>
+        <!-- Course sessions are generated from teaching.course, never booked on the website -->
+        <record id="appointment_type_course" model="appointment.type">
+            <field name="name">Live Course Session</field>
+            <field name="sequence">4</field>
+            <field name="category">custom</field>
+            <field name="schedule_based_on">users</field>
+            <field name="appointment_tz">Asia/Hebron</field>
+            <field name="appointment_duration">1.0</field>
+            <field name="auto_confirm" eval="False"/>
+            <field name="manage_capacity" eval="True"/>
+            <field name="user_capacity">7</field>
+            <field name="event_videocall_source">discuss</field>
+            <field name="staff_user_ids" eval="[Command.set([ref('base.user_admin')])]"/>
+            <field name="teaching_product_id" ref="product_session_course"/>
+            <field name="teaching_is_group" eval="True"/>
+            <field name="is_published" eval="False"/>
+        </record>
+
+        <function model="account_followup.followup.line" name="_teaching_ensure_monthly_level"/>
+
+        <record id="blog_announcements" model="blog.blog">
+            <field name="name">Announcements</field>
+            <field name="subtitle">News and new courses from Sigma Academy</field>
+        </record>
+    </data>
+</odoo>
