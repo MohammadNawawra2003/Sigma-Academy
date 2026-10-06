@@ -228,3 +228,15 @@ class TestTeachingSessions(TeachingCommonMixin, TransactionCase):
                 groups = menu.action.group_ids
                 self.assertTrue(not groups or groups & user.all_group_ids,
                                 '%s opens %s, restricted to %s' % (menu.complete_name, menu.action.name, groups.mapped('name')))
+
+    def test_student_balance_is_family_balance(self):
+        """5.4: a student's Balance and the "Has Outstanding" filter show what the family owes (Odoo books
+        the receivable on the family contact, so the student's own credit is always 0)."""
+        event = self.make_session(self.student_a1)
+        event.action_set_appointment_attended()
+        event.action_teaching_bill()
+        self.assertAlmostEqual(self.student_a1.teaching_balance, 150.0)
+        self.assertAlmostEqual(self.student_a2.teaching_balance, 150.0, msg='siblings share the family balance')
+        outstanding = self.env['res.partner'].search([('is_student', '=', True), ('commercial_partner_id.credit', '>', 0)])
+        self.assertIn(self.student_a1, outstanding)
+        self.assertNotIn(self.student_b1, outstanding)

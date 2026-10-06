@@ -15,6 +15,10 @@ class ResPartner(models.Model):
     teaching_invoice_to = fields.Selection(
         [('guardian', 'Guardian'), ('student', 'Student')], 'Invoice To', default='guardian',
         help='Who receives the invoices for this student. Falls back to the student when no guardian is set.')
+    teaching_balance = fields.Monetary(
+        'Balance', related='commercial_partner_id.credit', currency_field='currency_id',
+        groups='account.group_account_invoice,account.group_account_readonly',
+        help='What the family owes: Odoo books every invoice of a student on the family contact.')
     teaching_session_count = fields.Integer('Sessions', compute='_compute_teaching_counts')
     teaching_course_count = fields.Integer('Courses', compute='_compute_teaching_counts')
 
