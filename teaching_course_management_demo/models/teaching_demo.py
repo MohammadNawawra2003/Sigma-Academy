@@ -39,6 +39,14 @@ class ResCompany(models.Model):
                 company.write({'name': 'Sigma Academy', 'logo': base64.b64encode(f.read())})
 
     @api.model
+    def _teaching_demo_ensure_cash_journal(self):
+        """W1/R12: payments are cash or bank. The generic chart creates a Bank journal only."""
+        company = self.env.ref('base.main_company')
+        if company.chart_template and not self.env['account.journal'].search_count(
+                [('type', '=', 'cash'), ('company_id', '=', company.id)], limit=1):
+            self.env['account.journal'].create({'name': 'Cash', 'type': 'cash', 'code': 'CSH1', 'company_id': company.id})
+
+    @api.model
     def _teaching_demo_load(self):
         ref = self.env.ref
         Event = self.env['calendar.event'].with_context(teaching_skip_invoice_send=True, mail_create_nosubscribe=True)

@@ -7,4 +7,6 @@
         <!-- Shekel company with a chart of accounts (a fresh database has none) -->
         <function model="res.company" name="_teaching_demo_setup_company"/>
     </data>
+    <!-- Every update: idempotent, so databases installed before it also get the journal -->
+    <function model="res.company" name="_teaching_demo_ensure_cash_journal"/>
 </odoo>
