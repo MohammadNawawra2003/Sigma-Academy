@@ -210,3 +210,16 @@ class TestTeachingSessions(TeachingCommonMixin, TransactionCase):
         with self.assertRaises(UserError):
             event.unlink()
         self.assertEqual(len(event.teaching_invoice_ids), 1)
+
+    def test_instructor_menus_open(self):
+        """W30: every Teaching menu an instructor sees opens an action the instructor may run
+        (a visible menu ending in "Access Error" is a broken button)."""
+        root = self.env.ref('teaching_course_management.menu_teaching_root')
+        Menu = self.env['ir.ui.menu']
+        visible = Menu.browse(Menu.with_user(self.instructor)._visible_menu_ids())
+        menus = visible & Menu.search([('id', 'child_of', root.id)])
+        self.assertTrue(menus)
+        for menu in menus.filtered('action'):
+            groups = menu.action.group_ids
+            self.assertTrue(not groups or groups & self.instructor.all_group_ids,
+                            '%s opens %s, restricted to %s' % (menu.complete_name, menu.action.name, groups.mapped('name')))

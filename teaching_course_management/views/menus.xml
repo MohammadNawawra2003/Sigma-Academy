@@ -23,7 +23,8 @@
     <menuitem id="menu_teaching_invoicing" name="Invoicing" parent="menu_teaching_root" sequence="50"/>
     <menuitem id="menu_teaching_invoices" name="Invoices" parent="menu_teaching_invoicing" action="account.action_move_out_invoice_type" sequence="10"/>
     <menuitem id="menu_teaching_payments" name="Payments" parent="menu_teaching_invoicing" action="account.action_account_payments" sequence="20"/>
-    <menuitem id="menu_teaching_followup" name="Follow-up" parent="menu_teaching_invoicing" action="account_reports.action_account_reports_customer_statements" sequence="30"/>
+    <menuitem id="menu_teaching_followup" name="Follow-up" parent="menu_teaching_invoicing" action="account_reports.action_account_reports_customer_statements" sequence="30"
+              groups="account.group_account_basic"/>
 
     <menuitem id="menu_teaching_reporting" name="Reporting" parent="menu_teaching_root" sequence="60"/>
     <menuitem id="menu_teaching_sessions_analysis" name="Sessions Analysis" parent="menu_teaching_reporting" action="action_teaching_sessions_analysis" sequence="10"/>
