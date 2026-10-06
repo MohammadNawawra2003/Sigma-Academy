@@ -240,3 +240,9 @@ class TestTeachingSessions(TeachingCommonMixin, TransactionCase):
         outstanding = self.env['res.partner'].search([('is_student', '=', True), ('commercial_partner_id.credit', '>', 0)])
         self.assertIn(self.student_a1, outstanding)
         self.assertNotIn(self.student_b1, outstanding)
+
+    def test_income_is_admin_only(self):
+        """5.9: Income is for the academy administrator; an instructor cannot open it even by direct URL."""
+        action = self.env.ref('teaching_course_management.action_teaching_income')
+        self.assertIn(self.env.ref('teaching_course_management.group_teaching_admin'), action.group_ids)
+        self.assertNotIn(action.group_ids, self.instructor.all_group_ids)

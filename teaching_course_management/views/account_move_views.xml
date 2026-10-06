@@ -86,6 +86,7 @@
 
     <record id="action_teaching_income" model="ir.actions.act_window">
         <field name="name">Income</field>
+        <field name="group_ids" eval="[Command.link(ref('group_teaching_admin'))]"/>
         <field name="res_model">account.move</field>
         <field name="view_mode">pivot,graph,list,form</field>
         <field name="domain">[('move_type', 'in', ('out_invoice', 'out_refund')), ('state', '=', 'posted')]</field>
