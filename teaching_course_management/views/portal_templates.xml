@@ -77,7 +77,7 @@
         </thead>
         <tbody>
             <tr t-foreach="rows" t-as="event">
-                <td><t t-out="event.subject_id.name or ''"/> · <t t-out="event.appointment_type_id.name"/></td>
+                <td><t t-out="' · '.join(filter(None, [event.subject_id.name, event.appointment_type_id.name]))"/></td>
                 <td><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz, 'format': 'EEE d MMM y, HH:mm'}"/></td>
                 <td t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
                 <td t-out="event.user_id.name"/>
@@ -109,7 +109,7 @@
         <t t-call="portal.portal_layout">
             <div class="mt-3">
                 <a href="/my/sessions">&#8592; My Sessions</a>
-                <h3 class="mt-2"><t t-out="event.subject_id.name or ''"/> · <t t-out="event.appointment_type_id.name"/></h3>
+                <h3 class="mt-2"><t t-out="' · '.join(filter(None, [event.subject_id.name, event.appointment_type_id.name]))"/></h3>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <dl class="row mb-0">
