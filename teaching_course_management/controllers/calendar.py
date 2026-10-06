@@ -1,3 +1,5 @@
+from werkzeug.exceptions import NotFound
+
 from odoo.http import request, route
 
 from odoo.addons.appointment.controllers.calendar import AppointmentCalendarController
@@ -18,12 +20,12 @@ class TeachingCalendarController(AppointmentCalendarController):
         booking email)."""
         event = request.env['calendar.event'].sudo().search([('access_token', '=', access_token)], limit=1)
         if event.is_teaching and event.appointment_status == 'request':
-            return request.not_found()
+            raise NotFound()
         return super().calendar_join_videocall(access_token)
 
     @route()
     def calendar_videocall(self, access_token):
         event = request.env['calendar.event'].sudo().search([('access_token', '=', access_token)], limit=1)
         if event.is_teaching and event.appointment_status == 'request':
-            return request.not_found()
+            raise NotFound()
         return super().calendar_videocall(access_token)
