@@ -70,14 +70,14 @@ class TestTeachingBookingFlow(TeachingCommonMixin, HttpCase):
         cls.portal_family_a = new_test_user(cls.env, login='family_a_portal', groups='base.group_portal',
                                             partner_id=cls.family_a.id)
 
-    def _publish(self, *starts_local):
-        self.type_one.slot_ids = [Command.create({
+    def _publish(self, *starts_local, atype=None):
+        (atype or self.type_one).slot_ids = [Command.create({
             'slot_type': 'unique',
             'start_datetime': local_to_utc(s),
             'end_datetime': local_to_utc(s) + timedelta(hours=1),
         }) for s in starts_local]
 
-    def _submit(self, start_local, student, two_hours=False):
+    def _submit(self, start_local, student, two_hours=False, atype=None, asked_capacity=1):
         self.authenticate('family_a_portal', 'family_a_portal')
         data = {
             'csrf_token': http.Request.csrf_token(self),
@@ -86,12 +86,13 @@ class TestTeachingBookingFlow(TeachingCommonMixin, HttpCase):
             'name': 'Family A',
             'email': 'family.a@example.com',
             'staff_user_id': self.instructor.id,
-            'asked_capacity': 1,
-            'teaching_student_id': student.id,
+            'asked_capacity': asked_capacity,
         }
+        if student:
+            data['teaching_student_id'] = student.id
         if two_hours:
             data['teaching_two_hours'] = '1'
-        return self.url_open(f'/appointment/{self.type_one.id}/submit', data=data)
+        return self.url_open(f'/appointment/{(atype or self.type_one).id}/submit', data=data)
 
     def _events(self):
         return self.env['calendar.event'].search(
@@ -144,3 +145,21 @@ class TestTeachingBookingFlow(TeachingCommonMixin, HttpCase):
             allow_redirects=False)
         self.assertEqual(response.status_code, 303)
         self.assertIn('/web/login', response.headers['Location'])
+
+    def test_group_booking_takes_one_seat(self):
+        """R10: one website booking is one student, whatever "Number of people" is posted."""
+        self._publish(next_monday(17), atype=self.type_group)
+        self._submit(next_monday(17), self.student_a1, atype=self.type_group, asked_capacity=5)
+        event = self.env['calendar.event'].search([
+            ('appointment_type_id', '=', self.type_group.id), ('teaching_student_ids', 'in', self.family_a.child_ids.ids)])
+        self.assertEqual(len(event), 1)
+        self.assertEqual(event.booking_line_ids.mapped('capacity_reserved'), [1])
+        self.assertEqual(event.teaching_student_ids, self.student_a1)
+
+    def test_guardian_must_pick_a_student(self):
+        """A guardian's booking without a student is refused: the guardian is never billed as the student."""
+        self._publish(next_monday(17))
+        response = self._submit(next_monday(17), None)
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(self._events())
+        self.assertFalse(self.env['calendar.event'].search([('partner_ids', 'in', self.family_a.ids), ('is_teaching', '=', True)]))

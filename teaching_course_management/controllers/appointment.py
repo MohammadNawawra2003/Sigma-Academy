@@ -19,6 +19,12 @@ class TeachingAppointment(WebsiteAppointment):
             return request.redirect('/web/login?redirect=%s' % quote(request.httprequest.full_path, safe=''))
         return super().appointment_type_id_form(appointment_type_id, *args, **kwargs)
 
+    def _prepare_appointment_type_page_values(self, appointment_type, staff_user_id=False, resource_selected_id=False, **kwargs):
+        values = super()._prepare_appointment_type_page_values(appointment_type, staff_user_id, resource_selected_id, **kwargs)
+        if appointment_type.teaching_product_id:
+            values['max_capacity'] = 1  # one booking = one student; a group seat is counted per student
+        return values
+
     def _get_extra_calendar_event_params(self, **kwargs):
         params = super()._get_extra_calendar_event_params(**kwargs)
         student_id = kwargs.get('teaching_student_id')
@@ -45,9 +51,15 @@ class TeachingAppointment(WebsiteAppointment):
         if request.env.user._is_public():
             raise Forbidden()
         extra = extra_calendar_event_params or {}
-        students = request.env.user.partner_id.sudo()._teaching_family_students()
-        if extra.get('teaching_student_ids'):
-            students = students.browse(extra['teaching_student_ids'][0][2])
+        me = request.env.user.partner_id.sudo()
+        if not extra.get('teaching_student_ids'):  # every teaching booking is for a known student
+            if not me.is_student:
+                raise Forbidden()
+            extra['teaching_student_ids'] = [Command.set(me.ids)]
+        students = me.browse(extra['teaching_student_ids'][0][2])
+        # One booking reserves one seat, whatever "Number of people" was posted.
+        asked_capacity = 1
+        booking_line_values = [dict(v, capacity_reserved=1, capacity_used=1) for v in booking_line_values or []]
         appt = appointment_type.sudo().with_context(teaching_student_ids=students.ids)
         tz = appointment_type.appointment_tz
         resources = request.env['appointment.resource']
@@ -65,8 +77,7 @@ class TeachingAppointment(WebsiteAppointment):
                 return request.redirect('/appointment/%s?state=teaching-two-hours' % appointment_type.id)
         response = super()._handle_appointment_form_submission(
             appointment_type, date_start, date_end, description, duration, allday, answer_input_values, name,
-            customer, appointment_invite, guests, staff_user, asked_capacity, booking_line_values,
-            extra_calendar_event_params)
+            customer, appointment_invite, guests, staff_user, asked_capacity, booking_line_values, extra)
         if second_slot:
             second_end = date_end + relativedelta(hours=second_slot.duration)
             values = appointment_type._prepare_calendar_event_values(

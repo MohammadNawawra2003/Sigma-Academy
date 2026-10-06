@@ -78,6 +78,8 @@ class TeachingPortal(CustomerPortal):
             event.access_token = uuid.uuid4().hex
         attachments = request.env['ir.attachment'].sudo().search(
             [('res_model', '=', 'calendar.event'), ('res_id', '=', event.id), ('mimetype', '!=', 'text/calendar')])
+        attachments -= request.env['mail.message'].sudo().search([  # files of internal log notes stay internal
+            ('model', '=', 'calendar.event'), ('res_id', '=', event.id), ('subtype_id.internal', '=', True)]).attachment_ids
         for attachment in attachments:
             attachment.generate_access_token()
         values = self._prepare_portal_layout_values()
@@ -85,8 +87,7 @@ class TeachingPortal(CustomerPortal):
             'page_name': 'teaching_session',
             'event': event,
             'attachments': attachments,
-            'can_cancel': event.appointment_status == 'request' or (
-                event.appointment_status == 'booked' and fields.Datetime.now() < event.teaching_cancel_deadline),
+            'can_cancel': event._teaching_portal_can_cancel(),
             'show_link': event.appointment_status == 'booked' and event.teaching_mode == 'online' and event.videocall_location,
             'partner_id': request.env.user.partner_id.id,
         })

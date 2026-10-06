@@ -195,3 +195,18 @@ class TestTeachingSessions(TeachingCommonMixin, TransactionCase):
         self.assertTrue(level.auto_execute)
         self.assertFalse(self.env['ir.model.data'].search_count(
             [('module', '=', 'teaching_course_management'), ('model', '=', 'ir.cron')]))
+
+    def test_invoiced_session_is_locked(self):
+        """Billing integrity: an invoiced session cannot lose its invoice link (rebill), be archived
+        (cancelled) or deleted."""
+        event = self.make_session(self.student_a1)
+        event.action_set_appointment_attended()
+        event.action_teaching_bill()
+        for vals in ({'teaching_invoice_ids': [Command.clear()]}, {'teaching_duration_confirmed': False}, {'active': False}):
+            with self.assertRaises(UserError):
+                event.write(vals)
+        with self.assertRaises(UserError):
+            event.action_archive()
+        with self.assertRaises(UserError):
+            event.unlink()
+        self.assertEqual(len(event.teaching_invoice_ids), 1)

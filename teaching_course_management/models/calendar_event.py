@@ -10,6 +10,7 @@ BILLABLE_STATUSES = ('attended', 'no_show', 'late_cancelled')
 LOCKED_WHEN_INVOICED = {
     'teaching_actual_duration', 'teaching_price_unit', 'teaching_billing',
     'teaching_student_ids', 'appointment_type_id', 'appointment_status',
+    'teaching_invoice_ids', 'teaching_duration_confirmed', 'active',
 }
 
 
@@ -89,6 +90,14 @@ class CalendarEvent(models.Model):
             event.teaching_amount = 0.0 if event.teaching_billing == 'waive' else (
                 event.teaching_price_unit * event.teaching_actual_duration * len(event.teaching_student_ids))
 
+    @api.depends('is_teaching', 'appointment_status')
+    def _compute_videocall_redirection(self):
+        # The meeting link is shared once the academy confirms: not in the booking email or page.
+        super()._compute_videocall_redirection()
+        for event in self:
+            if event.is_teaching and event.appointment_status == 'request':
+                event.videocall_redirection = False
+
     @api.depends('teaching_invoice_ids')
     def _compute_teaching_invoice_count(self):
         for event in self:
@@ -149,12 +158,17 @@ class CalendarEvent(models.Model):
 
     def write(self, vals):
         locked = LOCKED_WHEN_INVOICED & set(vals)
-        if locked and self.filtered('teaching_invoice_ids') and not self.env.context.get('teaching_billing'):
+        if locked and self.filtered('teaching_invoice_ids'):
             raise UserError(_('This session is already invoiced. Its status, students, type, duration and price are locked.'))
         res = super().write(vals)
         if 'teaching_student_ids' in vals:
             self.filtered('is_teaching')._teaching_sync_attendees()
         return res
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_invoiced(self):
+        if self.filtered('teaching_invoice_ids'):
+            raise UserError(_('This session is already invoiced and cannot be deleted.'))
 
     def _teaching_sync_attendees(self):
         """Students and their guardians are attendees, so they get the invitation, reminders
@@ -174,6 +188,16 @@ class CalendarEvent(models.Model):
             if event.appointment_status not in allowed:
                 raise UserError(_('%(action)s is not possible while the session is "%(status)s".',
                                   action=label, status=dict(event._fields['appointment_status']._description_selection(self.env)).get(event.appointment_status)))
+
+    def _teaching_portal_can_cancel(self):
+        """R6 for the family's own cancel (portal page and the native /calendar/cancel route): a
+        pending request, or a confirmed session before the deadline. Course sessions and sessions
+        shared by several students are cancelled by the academy, never by one family."""
+        self.ensure_one()
+        if self.teaching_course_id or len(self.teaching_student_ids) > 1:
+            return False
+        return self.appointment_status == 'request' or (
+            self.appointment_status == 'booked' and fields.Datetime.now() < self.teaching_cancel_deadline)
 
     def _teaching_recipients(self):
         return self.teaching_student_ids | self.teaching_student_ids.parent_id
@@ -272,7 +296,7 @@ class CalendarEvent(models.Model):
         moves = self.env['account.move'].create([
             self._teaching_invoice_vals(student, product) for student in self.teaching_student_ids])
         moves.action_post()
-        self.with_context(teaching_billing=True).write({
+        self.write({
             'teaching_invoice_ids': [Command.set(moves.ids)],
             'teaching_duration_confirmed': True,
         })

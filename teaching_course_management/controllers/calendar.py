@@ -1,4 +1,4 @@
-from odoo import fields
+from odoo.http import request, route
 
 from odoo.addons.appointment.controllers.calendar import AppointmentCalendarController
 
@@ -6,9 +6,24 @@ from odoo.addons.appointment.controllers.calendar import AppointmentCalendarCont
 class TeachingCalendarController(AppointmentCalendarController):
 
     def _get_prevent_cancel_status(self, event):
-        """R6: a confirmed teaching session can be cancelled from the portal until midnight
-        the night before. A pending request can always be withdrawn."""
-        if (event.is_teaching and event.appointment_status == 'booked'
-                and fields.Datetime.now() >= event.teaching_cancel_deadline):
+        """R6: see calendar.event._teaching_portal_can_cancel. Anything else (late cancelled,
+        attended, a course or shared session) cannot be cancelled with the access token."""
+        if event.is_teaching and not event._teaching_portal_can_cancel():
             return 'no_time_left'
         return super()._get_prevent_cancel_status(event)
+
+    @route()
+    def calendar_join_videocall(self, access_token):
+        """No meeting before the academy confirms the booking (the token also travels in the
+        booking email)."""
+        event = request.env['calendar.event'].sudo().search([('access_token', '=', access_token)], limit=1)
+        if event.is_teaching and event.appointment_status == 'request':
+            return request.not_found()
+        return super().calendar_join_videocall(access_token)
+
+    @route()
+    def calendar_videocall(self, access_token):
+        event = request.env['calendar.event'].sudo().search([('access_token', '=', access_token)], limit=1)
+        if event.is_teaching and event.appointment_status == 'request':
+            return request.not_found()
+        return super().calendar_videocall(access_token)

@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 
 from odoo import fields
@@ -69,3 +70,41 @@ class TestTeachingPortal(TeachingCommonMixin, HttpCase):
         self.assertEqual(self.url_open('/my').status_code, 200)
         self.assertEqual(self.url_open('/my/courses').status_code, 200)
         self.assertIn('Announcements', self.url_open('/my').text)
+
+    def test_token_cancel_only_own_cancellable_session(self):
+        """R6 on the native /calendar/cancel/<token> route: a Late Cancelled charge cannot be cancelled
+        away, and one family cannot cancel a session shared with other students."""
+        start = fields.Datetime.now() + timedelta(days=3)
+        late = self.make_session(self.student_a1, start=start + timedelta(hours=6), status='late_cancelled')
+        shared = self.make_session(self.student_a1 | self.student_a2, atype=self.type_group, start=start + timedelta(hours=8))
+        own = self.make_session(self.student_a1, start=start + timedelta(hours=10))
+        for event in late | shared | own:
+            event.access_token = uuid.uuid4().hex
+            self.url_open(f'/calendar/cancel/{event.access_token}')
+        self.assertEqual(late.appointment_status, 'late_cancelled')
+        self.assertTrue(late.active)
+        self.assertEqual(shared.appointment_status, 'booked')
+        self.assertEqual(own.with_context(active_test=False).appointment_status, 'cancelled')
+        self.authenticate('family_a_portal', 'family_a_portal')
+        self.assertNotIn('/calendar/cancel/', self.url_open(f'/my/sessions/{shared.id}').text)
+
+    def test_meeting_not_reachable_while_pending(self):
+        """The booking email and the videocall routes give no meeting before the academy confirms."""
+        pending = self.make_session(self.student_a1, start=fields.Datetime.now() + timedelta(days=5), status='request')
+        pending._set_discuss_videocall_location()
+        self.assertFalse(pending.videocall_redirection)
+        self.assertEqual(self.url_open(f'/calendar/videocall/{pending.access_token}').status_code, 404)
+        self.assertEqual(self.url_open(f'/calendar/join_videocall/{pending.access_token}').status_code, 404)
+        pending.action_teaching_approve()
+        self.assertTrue(pending.videocall_redirection)
+
+    def test_materials_exclude_internal_notes(self):
+        """Materials = files the instructor shares; files of internal log notes stay internal."""
+        Attachment = self.env['ir.attachment']
+        shared = Attachment.create({'name': 'worksheet-shared.pdf', 'raw': b'x', 'res_model': 'calendar.event', 'res_id': self.session_a1.id})
+        internal = Attachment.create({'name': 'grading-internal.pdf', 'raw': b'x', 'res_model': 'calendar.event', 'res_id': self.session_a1.id})
+        self.session_a1.message_post(body='note', subtype_xmlid='mail.mt_note', attachment_ids=internal.ids)
+        self.authenticate('family_a_portal', 'family_a_portal')
+        page = self.url_open(f'/my/sessions/{self.session_a1.id}').text
+        self.assertIn(shared.name, page)
+        self.assertNotIn(internal.name, page)
