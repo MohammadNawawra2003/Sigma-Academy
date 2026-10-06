@@ -98,6 +98,8 @@ class TestTeachingPortal(TeachingCommonMixin, HttpCase):
         self.assertEqual(self.url_open(f'/calendar/join_videocall/{pending.access_token}').status_code, 404)
         pending.action_teaching_approve()
         self.assertTrue(pending.videocall_redirection)
+        pending.teaching_mode = 'onsite'
+        self.assertFalse(pending.videocall_redirection, 'no link for an on-site session')
 
     def test_materials_exclude_internal_notes(self):
         """Materials = files the instructor shares; files of internal log notes stay internal."""

@@ -90,12 +90,13 @@ class CalendarEvent(models.Model):
             event.teaching_amount = 0.0 if event.teaching_billing == 'waive' else (
                 event.teaching_price_unit * event.teaching_actual_duration * len(event.teaching_student_ids))
 
-    @api.depends('is_teaching', 'appointment_status')
+    @api.depends('is_teaching', 'appointment_status', 'teaching_mode')
     def _compute_videocall_redirection(self):
-        # The meeting link is shared once the academy confirms: not in the booking email or page.
+        # The meeting link is shared once the academy confirms, and never for an on-site session:
+        # not in the emails or pages that print it.
         super()._compute_videocall_redirection()
         for event in self:
-            if event.is_teaching and event.appointment_status == 'request':
+            if event.is_teaching and (event.appointment_status == 'request' or event.teaching_mode == 'onsite'):
                 event.videocall_redirection = False
 
     @api.depends('teaching_invoice_ids')
