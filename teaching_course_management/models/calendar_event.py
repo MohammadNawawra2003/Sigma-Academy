@@ -341,6 +341,11 @@ class CalendarEvent(models.Model):
             action.update(views=[(False, 'form')], res_id=self.teaching_invoice_ids.id)
         return action
 
+    def action_view_teaching_course(self):
+        self.ensure_one()
+        return {'type': 'ir.actions.act_window', 'res_model': 'teaching.course',
+                'res_id': self.teaching_course_id.id, 'view_mode': 'form'}
+
     def action_teaching_convert_group(self):
         self.ensure_one()
         self._teaching_check_status(('booked',), _('Convert to Group'))

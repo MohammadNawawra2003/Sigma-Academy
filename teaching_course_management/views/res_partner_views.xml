@@ -5,7 +5,16 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <header groups="teaching_course_management.group_teaching_instructor" invisible="not is_student and not is_guardian">
+                    <button name="%(portal.partner_wizard_action)d" type="action" string="Grant Portal Access"/>
+                </header>
+            </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_partner_invoices" type="object" class="oe_stat_button" icon="fa-money"
+                        invisible="not is_student and not is_guardian" groups="teaching_course_management.group_teaching_instructor">
+                    <field name="credit" widget="statinfo" string="Balance"/>
+                </button>
                 <button name="action_teaching_sessions" type="object" class="oe_stat_button" icon="fa-calendar"
                         invisible="not is_student and not is_guardian" groups="teaching_course_management.group_teaching_instructor">
                     <field name="teaching_session_count" widget="statinfo" string="Sessions"/>

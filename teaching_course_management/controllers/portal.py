@@ -4,6 +4,7 @@ from werkzeug.exceptions import NotFound
 
 from odoo import fields, http
 from odoo.http import request
+from odoo.tools import format_amount
 
 from odoo.addons.portal.controllers.portal import CustomerPortal
 
@@ -28,6 +29,9 @@ class TeachingPortal(CustomerPortal):
 
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
+        if not counters:  # the page itself, not the /my/counters RPC
+            values['teaching_balance_due'] = format_amount(
+                request.env, request.env.user.partner_id.commercial_partner_id.sudo().credit, request.env.company.currency_id)
         if 'teaching_session_count' in counters or 'teaching_course_count' in counters:
             students = self._teaching_students()
             if 'teaching_session_count' in counters:

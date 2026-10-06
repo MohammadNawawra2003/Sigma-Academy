@@ -64,6 +64,7 @@ class TestTeachingPortal(TeachingCommonMixin, HttpCase):
         for amount in ('225.00', '100.00', '125.00'):
             self.assertIn(amount, page)
         self.assertIn(invoice.name, page)
+        self.assertIn('125.00', self.url_open('/my').text, 'the Balance card shows the amount due')
 
     def test_home_and_courses_pages(self):
         self.authenticate('family_a_portal', 'family_a_portal')
@@ -80,7 +81,7 @@ class TestTeachingPortal(TeachingCommonMixin, HttpCase):
         own = self.make_session(self.student_a1, start=start + timedelta(hours=10))
         for event in late | shared | own:
             event.access_token = uuid.uuid4().hex
-            self.url_open(f'/calendar/cancel/{event.access_token}')
+            self.url_open(f'/calendar/cancel/{event.access_token}?partner_id={self.family_a.id}')  # the portal link
         self.assertEqual(late.appointment_status, 'late_cancelled')
         self.assertTrue(late.active)
         self.assertEqual(shared.appointment_status, 'booked')
@@ -108,3 +109,13 @@ class TestTeachingPortal(TeachingCommonMixin, HttpCase):
         page = self.url_open(f'/my/sessions/{self.session_a1.id}').text
         self.assertIn(shared.name, page)
         self.assertNotIn(internal.name, page)
+
+    def test_announcement_links_to_course(self):
+        """W26 / 8.2: a course announcement is public and offers "View course"."""
+        course = self.env['teaching.course'].create({
+            'name': 'Announced course', 'subject_id': self.subject.id, 'curriculum_id': self.curriculum.id,
+            'grade_id': self.grade.id, 'wed': True})
+        post = self.env['blog.post'].browse(course.action_publish_announcement()['res_id'])
+        page = self.url_open(post.website_url).text
+        self.assertIn('Announced course', page)
+        self.assertIn('View course', page)

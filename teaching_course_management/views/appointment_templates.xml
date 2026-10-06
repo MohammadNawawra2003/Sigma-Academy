@@ -21,8 +21,12 @@
                             <input type="checkbox" class="form-check-input" id="teaching_two_hours" name="teaching_two_hours" value="1"/>
                             <label class="form-check-label" for="teaching_two_hours">2 hours — two sessions back to back</label>
                         </div>
-                        <small class="text-muted">The next published hour must also be free. Nothing is confirmed automatically: Sari approves every booking.</small>
+                        <small class="text-muted">The next published hour must also be free.</small>
                     </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-sm-3"/>
+                    <small class="col-sm text-muted">Nothing is confirmed automatically. Sari approves every booking.</small>
                 </div>
             </t>
         </xpath>
@@ -39,6 +43,9 @@
 
     <!-- The meeting link is shared only once the academy confirms the booking -->
     <template id="appointment_validated_teaching" inherit_id="appointment.appointment_validated" name="Teaching: hide link while pending">
+        <xpath expr="//h5[contains(., 'We will come back to you to confirm it.')]" position="after">
+            <p t-if="event.is_teaching" class="text-muted">Nothing is confirmed automatically. Sari approves every booking.</p>
+        </xpath>
         <xpath expr="//div[@t-if='event.videocall_location']" position="attributes">
             <attribute name="t-if">event.videocall_location and not (event.is_teaching and event.appointment_status == 'request')</attribute>
         </xpath>

@@ -22,6 +22,7 @@
             <t t-call="portal.portal_docs_entry">
                 <t t-set="icon" t-value="'/account/static/src/img/bill.svg'"/>
                 <t t-set="title">Balance</t>
+                <t t-set="count" t-value="teaching_balance_due"/>
                 <t t-set="text">What is invoiced, paid and still due</t>
                 <t t-set="url" t-value="'/my/balance'"/>
                 <t t-set="config_card" t-value="True"/>
@@ -41,6 +42,14 @@
                 <t t-set="config_card" t-value="True"/>
             </t>
         </div>
+    </template>
+
+    <template id="blog_post_content_teaching" inherit_id="website_blog.blog_post_content" name="Teaching: View course">
+        <xpath expr="//div[@t-field='blog_post.content']" position="after">
+            <div t-if="blog_post.sudo().teaching_course_id" class="css_editable_mode_hidden my-4">
+                <a href="/my/courses" class="btn btn-primary">View course</a>
+            </div>
+        </xpath>
     </template>
 
     <template id="portal_teaching_student_selector" name="Teaching: child selector">

@@ -182,6 +182,8 @@
                                 invisible="not teaching_invoice_count">
                             <field name="teaching_invoice_count" widget="statinfo" string="Invoices"/>
                         </button>
+                        <button name="action_view_teaching_course" type="object" class="oe_stat_button" icon="fa-graduation-cap"
+                                string="Course" invisible="not teaching_course_id"/>
                     </div>
                     <widget name="web_ribbon" title="Cancelled" bg_color="text-bg-secondary" invisible="active"/>
                     <field name="active" invisible="1"/>
