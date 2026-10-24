@@ -90,7 +90,7 @@
             <tr t-foreach="rows" t-as="event">
                 <td><t t-out="' · '.join(filter(None, [event.subject_id.name, event.appointment_type_id.name]))"/></td>
                 <td><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz, 'format': 'EEE d MMM y, HH:mm'}"/></td>
-                <td t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
+                <td><t t-set="mine" t-value="event.teaching_student_ids &amp; teaching_students"/><t t-set="others" t-value="len(event.teaching_student_ids - mine)"/><t t-out="', '.join(mine.mapped('name'))"/><span t-if="others" class="text-muted"> + <t t-out="others"/> other student<t t-if="others &gt; 1">s</t></span></td>
                 <td t-out="event.user_id.name"/>
                 <td><t t-set="status" t-value="event._teaching_portal_status()"/><span t-attf-class="badge #{status[1]}" t-out="status[0]"/></td>
                 <td class="text-end text-nowrap">
@@ -144,7 +144,7 @@
                         <dl class="row mb-0">
                             <dt class="col-5">Status</dt><dd class="col-7"><t t-set="status" t-value="event._teaching_portal_status()"/><span t-attf-class="badge #{status[1]}" t-out="status[0]"/></dd>
                             <dt class="col-5">When</dt><dd class="col-7"><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz, 'format': 'EEE d MMM y, HH:mm'}"/> (<span t-field="event.duration" t-options="{'widget': 'float_time'}"/>)</dd>
-                            <dt class="col-5">Student(s)</dt><dd class="col-7" t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
+                            <dt class="col-5">Student(s)</dt><dd class="col-7"><!-- a shared session names only the family's own children --><t t-set="mine" t-value="event.teaching_student_ids &amp; teaching_students"/><t t-set="others" t-value="len(event.teaching_student_ids - mine)"/><t t-out="', '.join(mine.mapped('name'))"/><span t-if="others" class="text-muted"> + <t t-out="others"/> other student<t t-if="others &gt; 1">s</t></span></dd>
                             <dt class="col-5">Instructor</dt><dd class="col-7" t-out="event.user_id.name"/>
                             <dt class="col-5">Mode</dt><dd class="col-7"><span t-field="event.teaching_mode"/></dd>
                             <dt class="col-5">Meeting link</dt>

@@ -99,6 +99,7 @@ class TeachingPortal(AppointmentPortal):
         values = self._prepare_portal_layout_values()
         values.update({
             'page_name': 'teaching_session',
+            'teaching_students': students,
             'booked': kw.get('booked'),
             'confirmed_meanwhile': kw.get('confirmed_meanwhile'),
             'event': event,

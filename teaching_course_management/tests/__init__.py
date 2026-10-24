@@ -3,3 +3,4 @@ from . import test_teaching_booking
 from . import test_teaching_course
 from . import test_teaching_portal
 from . import test_teaching_feedback
+from . import test_teaching_privacy

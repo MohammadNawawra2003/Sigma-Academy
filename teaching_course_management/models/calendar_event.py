@@ -1,6 +1,7 @@
 from datetime import datetime, time
 
 import pytz
+import vobject
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -218,16 +219,47 @@ class CalendarEvent(models.Model):
         selection = dict(self._fields['appointment_status']._description_selection(self.env))
         return selection.get(self.appointment_status, ''), 'text-bg-light'
 
-    def _teaching_recipients(self):
-        return self.teaching_student_ids | self.teaching_student_ids.parent_id
+    def _teaching_families(self):
+        """The family of each student: its guardian, or the student itself."""
+        return self.teaching_student_ids.mapped(lambda s: s.parent_id or s)
+
+    def _teaching_is_shared(self):
+        """Students of several families (group, course): each family sees only its own children."""
+        self.ensure_one()
+        return self.is_teaching and len(self._teaching_families()) > 1
+
+    def _teaching_title(self):
+        self.ensure_one()
+        return ' · '.join(filter(None, [self.subject_id.name, self.appointment_type_id.name]))
+
+    def _teaching_family_view(self, family_id=False):
+        """Students a family's email may name; every student for a staff email."""
+        self.ensure_one()
+        family = self.env['res.partner'].browse(family_id)
+        return self.teaching_student_ids & family._teaching_family_students() if family else self.teaching_student_ids
 
     def _teaching_notify(self, template_xmlid):
+        """One message per family, naming only its own children."""
         template = self.env.ref(template_xmlid, raise_if_not_found=False)
         for event in self:
             if template:
-                event.message_post_with_source(
-                    template, message_type='comment', subtype_xmlid='mail.mt_comment',
-                    partner_ids=event._teaching_recipients().ids)
+                for family in event._teaching_families():
+                    event.with_context(teaching_family_id=family.id).message_post_with_source(
+                        template, message_type='comment', subtype_xmlid='mail.mt_comment',
+                        partner_ids=(event._teaching_family_view(family.id) | family).ids)
+
+    def _get_ics_file(self):
+        """The teaching notice to a family of a shared session: no attendee addresses, and no
+        description (it carries the session's shared access link)."""
+        files = super()._get_ics_file()
+        if self.env.context.get('teaching_notice'):
+            for event_id, data in files.items():
+                calendar = vobject.readOne(data.decode())
+                for vevent in calendar.vevent_list:
+                    vevent.contents.pop('attendee', None)
+                    vevent.contents.pop('description', None)
+                files[event_id] = calendar.serialize().encode()
+        return files
 
     # ------------------------------------------------------------------ buttons
 

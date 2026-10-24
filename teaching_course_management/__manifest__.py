@@ -1,6 +1,6 @@
 {
     'name': 'Teaching',
-    'version': '19.0.1.0.7',
+    'version': '19.0.1.0.8',
     'category': 'Services',
     'summary': 'Sigma Academy: sessions, availability, courses, billing and portal',
     'author': 'Al Shayeb Auditing and Accountancy Co',

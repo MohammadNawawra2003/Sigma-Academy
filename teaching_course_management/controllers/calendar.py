@@ -42,13 +42,21 @@ class TeachingCalendarController(AppointmentCalendarController):
 
     @route()
     def appointment_view(self, access_token, partner_id=False, state=False, attendee_token=None, **kwargs):
-        """Sari 10 Oct: a signed-in family opening a session link (booking email) gets its own session
-        page, not the generic "We will come back to you to confirm it" page. Others keep the native page."""
+        """Sari 10 Oct: a family opening a session link (booking email) gets its own session page, not
+        the generic "We will come back to you to confirm it" page. That page also lists every attendee
+        of a shared session, so nobody but staff gets it: the session page signs in and checks the family."""
         event = request.env['calendar.event'].sudo().search([('access_token', '=', access_token)], limit=1)
-        if event.is_teaching and event.active and not request.env.user._is_public() and (
-                event.teaching_student_ids & request.env.user.partner_id.sudo()._teaching_family_students()):
+        if event.is_teaching and not request.env.user._is_internal():
             return request.redirect('/my/sessions/%s' % event.id)
         return super().appointment_view(access_token, partner_id=partner_id, state=state, attendee_token=attendee_token, **kwargs)
+
+    @route()
+    def view_meeting(self, token, id, **kwargs):
+        """Odoo's invitation page (link in its attendee emails) lists every attendee: same as above."""
+        event = request.env['calendar.event'].sudo().browse(int(id)).exists()
+        if event.is_teaching and not request.env.user._is_internal():
+            return request.redirect('/my/sessions/%s' % event.id)
+        return super().view_meeting(token, id, **kwargs)
 
     @route()
     def calendar_join_videocall(self, access_token):
