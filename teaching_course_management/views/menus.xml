@@ -12,7 +12,6 @@
 
     <menuitem id="menu_teaching_schedule" name="My Schedule" parent="menu_teaching_root" sequence="20"/>
     <menuitem id="menu_teaching_my_availability" name="My Availability" parent="menu_teaching_schedule" action="action_teaching_my_availability" sequence="10"/>
-    <menuitem id="menu_teaching_working_hours" name="Working Hours" parent="menu_teaching_schedule" action="hr.open_view_employee_list_my" sequence="20"/>
 
     <menuitem id="menu_teaching_students_root" name="Students" parent="menu_teaching_root" sequence="30"/>
     <menuitem id="menu_teaching_students" name="Students" parent="menu_teaching_students_root" action="action_teaching_students" sequence="10"/>

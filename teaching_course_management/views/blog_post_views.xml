@@ -11,10 +11,29 @@
         </field>
     </record>
 
+    <!-- Sari 10 Oct (links to wrong pages): Odoo's only blog.post list is the Website pages list, whose
+         row click leaves the back office for the public page. Here a row opens the post's form. -->
+    <record id="blog_post_view_list_teaching" model="ir.ui.view">
+        <field name="name">blog.post.list.teaching</field>
+        <field name="model">blog.post</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Announcements" default_order="post_date desc">
+                <field name="name"/>
+                <field name="teaching_course_id"/>
+                <field name="post_date"/>
+                <field name="is_published" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
     <record id="action_teaching_announcements" model="ir.actions.act_window">
         <field name="name">Announcements</field>
         <field name="res_model">blog.post</field>
         <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('blog_post_view_list_teaching')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('website_blog.view_blog_post_form')})]"/>
         <field name="domain" eval="[('blog_id', '=', ref('blog_announcements'))]"/>
         <field name="context" eval="{'default_blog_id': ref('blog_announcements')}"/>
         <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No announcements yet</p><p>Publish one from a course (Publish Announcement) or create it here. Published posts are public on the website.</p></field>

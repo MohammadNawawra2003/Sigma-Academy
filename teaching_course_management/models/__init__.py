@@ -1,5 +1,6 @@
 from . import teaching_config
 from . import res_partner
+from . import appointment_slot
 from . import appointment_type
 from . import calendar_event
 from . import teaching_course

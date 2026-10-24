@@ -41,12 +41,81 @@
         <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No session types</p><p>Session types are appointment types linked to a teaching product (price per hour).</p></field>
     </record>
 
-    <!-- My Availability: the native appointment form (Availabilities tab = dated slots) -->
+    <!-- My Availability (Sari 10 Oct): the instructor's dated slots themselves, on a calendar he can
+         drag, resize and click, or as an editable list. Native appointment.slot records: the booking
+         calendar of each session type reads them directly. -->
+    <record id="appointment_slot_view_calendar_teaching" model="ir.ui.view">
+        <field name="name">appointment.slot.calendar.teaching</field>
+        <field name="model">appointment.slot</field>
+        <field name="arch" type="xml">
+            <calendar string="My Availability" date_start="start_datetime" date_stop="end_datetime"
+                      color="appointment_type_id" mode="week" quick_create="0" event_open_popup="1">
+                <field name="appointment_type_id" filters="1"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="appointment_slot_view_list_teaching" model="ir.ui.view">
+        <field name="name">appointment.slot.list.teaching</field>
+        <field name="model">appointment.slot</field>
+        <field name="arch" type="xml">
+            <list string="My Availability" editable="bottom" default_order="start_datetime">
+                <field name="appointment_type_id" options="{'no_create': True, 'no_open': True}"
+                       domain="[('teaching_product_id', '!=', False), ('staff_user_ids', 'in', uid)]"/>
+                <field name="start_datetime" required="1"/>
+                <field name="end_datetime" required="1"/>
+                <field name="duration" widget="float_time" optional="show"/>
+                <field name="slot_type" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="appointment_slot_view_form_teaching" model="ir.ui.view">
+        <field name="name">appointment.slot.form.teaching</field>
+        <field name="model">appointment.slot</field>
+        <field name="arch" type="xml">
+            <form string="Available Slot">
+                <group>
+                    <field name="appointment_type_id" required="1" options="{'no_create': True, 'no_open': True}"
+                           domain="[('teaching_product_id', '!=', False), ('staff_user_ids', 'in', uid)]"/>
+                    <field name="start_datetime" required="1"/>
+                    <field name="end_datetime" required="1"/>
+                    <field name="duration" widget="float_time"/>
+                    <field name="slot_type" invisible="1"/>
+                </group>
+                <p class="text-muted">A slot is offered to students as soon as it is saved. A slot that already holds a
+                    booking cannot be moved or deleted: cancel or move the session first.</p>
+            </form>
+        </field>
+    </record>
+
+    <record id="appointment_slot_view_search_teaching" model="ir.ui.view">
+        <field name="name">appointment.slot.search.teaching</field>
+        <field name="model">appointment.slot</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="appointment_type_id"/>
+                <filter name="upcoming" string="Upcoming" domain="[('end_datetime', '&gt;=', 'now')]"/>
+                <filter name="past" string="Past" domain="[('end_datetime', '&lt;', 'now')]"/>
+                <group>
+                    <filter name="group_type" string="Session Type" context="{'group_by': 'appointment_type_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="action_teaching_my_availability" model="ir.actions.act_window">
         <field name="name">My Availability</field>
-        <field name="res_model">appointment.type</field>
-        <field name="view_mode">kanban,list,form</field>
-        <field name="domain">[('teaching_product_id', '!=', False), ('staff_user_ids', 'in', uid)]</field>
-        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">You are not staff on any session type</p><p>Ask the administrator to add you to the session types you teach, then add dated slots in the Availabilities tab.</p></field>
+        <field name="res_model">appointment.slot</field>
+        <field name="view_mode">list,calendar,form</field>
+        <field name="domain">[('appointment_type_id.teaching_product_id', '!=', False), ('appointment_type_id.staff_user_ids', 'in', uid), ('slot_type', '=', 'unique')]</field>
+        <field name="context">{'search_default_upcoming': 1}</field>
+        <field name="search_view_id" ref="appointment_slot_view_search_teaching"/>
+        <!-- list first: every upcoming hour at a glance, New and inline edit; the week calendar is one click away -->
+        <field name="view_ids" eval="[Command.clear(),
+            Command.create({'view_mode': 'list', 'view_id': ref('appointment_slot_view_list_teaching')}),
+            Command.create({'view_mode': 'calendar', 'view_id': ref('appointment_slot_view_calendar_teaching')}),
+            Command.create({'view_mode': 'form', 'view_id': ref('appointment_slot_view_form_teaching')})]"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No available slots yet</p><p>Click New to publish an hour students can book (or click and drag on the calendar view). Click a time to change it, or delete the line.</p></field>
     </record>
 </odoo>

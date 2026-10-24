@@ -26,4 +26,31 @@
         <field name="user_ids" eval="[Command.link(ref('base.user_root')), Command.link(ref('base.user_admin'))]"/>
         <field name="comment">Everything, plus Configuration, Announcements, Income and Settings.</field>
     </record>
+
+    <!-- Sari 10 Oct (links to wrong pages): natively an internal user reads only published types or
+         types he is staff on, so opening a Live Course session raised an Access Error for every other
+         instructor. Read only; writing stays with the native own-type rules. Ored with them. -->
+    <record id="appointment_type_rule_teaching_instructor_read" model="ir.rule">
+        <field name="name">appointment.type: teaching instructor reads every session type</field>
+        <field name="model_id" ref="appointment.model_appointment_type"/>
+        <field name="domain_force">[('teaching_product_id', '!=', False)]</field>
+        <field name="groups" eval="[Command.link(ref('group_teaching_instructor'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Sari 10 Oct: an instructor edits the published slots of every session type he teaches on,
+         not only of types he created himself (the native appointment-user rule). Ored with it. -->
+    <record id="appointment_slot_rule_teaching_instructor" model="ir.rule">
+        <field name="name">appointment.slot: teaching instructor edits slots of own session types</field>
+        <field name="model_id" ref="appointment.model_appointment_slot"/>
+        <field name="domain_force">[('appointment_type_id.teaching_product_id', '!=', False), ('appointment_type_id.staff_user_ids', 'in', user.id)]</field>
+        <field name="groups" eval="[Command.link(ref('group_teaching_instructor'))]"/>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
 </odoo>

@@ -199,6 +199,7 @@
                             <field name="appointment_type_id" string="Type" required="1" options="{'no_create': True}"
                                    domain="[('teaching_product_id', '!=', False)]" readonly="teaching_invoice_count"/>
                             <field name="teaching_course_id" invisible="not teaching_course_id" readonly="1"/>
+                            <field name="teaching_pair_event_id" invisible="not teaching_pair_event_id"/>
                         </group>
                         <group>
                             <field name="teaching_mode" widget="radio" options="{'horizontal': true}"/>

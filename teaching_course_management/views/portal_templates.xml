@@ -38,16 +38,27 @@
                 <t t-set="icon" t-value="'/appointment/static/src/img/clock.svg'"/>
                 <t t-set="title">Book a Session</t>
                 <t t-set="text">Pick a free hour in the instructor's calendar</t>
-                <t t-set="url" t-value="'/appointment'"/>
+                <t t-set="url" t-value="teaching_book_url"/>
                 <t t-set="config_card" t-value="True"/>
             </t>
         </div>
     </template>
 
+    <!-- Sari 10 Oct: the session page is not an Odoo appointment page; no "Appointments" crumb leading
+         to the generic appointment list -->
+    <template id="portal_breadcrumbs_teaching" inherit_id="appointment.portal_my_home_menu_appointment" name="Teaching: no Appointments crumb on session pages">
+        <xpath expr="//li[@t-if=&quot;page_name == 'appointment' or event&quot;]" position="attributes">
+            <attribute name="t-if">page_name == 'appointment' or (event and page_name != 'teaching_session')</attribute>
+        </xpath>
+        <xpath expr="//li[@t-if='event']" position="attributes">
+            <attribute name="t-if">event and page_name != 'teaching_session'</attribute>
+        </xpath>
+    </template>
+
     <template id="blog_post_content_teaching" inherit_id="website_blog.blog_post_content" name="Teaching: View course">
         <xpath expr="//div[@t-field='blog_post.content']" position="after">
             <div t-if="blog_post.sudo().teaching_course_id" class="css_editable_mode_hidden my-4">
-                <a href="/my/courses" class="btn btn-primary">View course</a>
+                <a t-attf-href="/my/courses#course-#{blog_post.sudo().teaching_course_id.id}" class="btn btn-primary">View course</a>
             </div>
         </xpath>
     </template>
@@ -81,11 +92,15 @@
                 <td><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz, 'format': 'EEE d MMM y, HH:mm'}"/></td>
                 <td t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
                 <td t-out="event.user_id.name"/>
-                <td><span class="badge text-bg-light" t-field="event.appointment_status"/></td>
+                <td><t t-set="status" t-value="event._teaching_portal_status()"/><span t-attf-class="badge #{status[1]}" t-out="status[0]"/></td>
                 <td class="text-end text-nowrap">
                     <a t-if="event.appointment_status == 'booked' and event.teaching_mode == 'online' and event.videocall_location and event.stop &gt;= datetime.datetime.now()"
                        t-att-href="event.videocall_location" target="_blank" class="btn btn-sm btn-primary">Join</a>
                     <a t-attf-href="/my/sessions/#{event.id}" class="btn btn-sm btn-secondary">Open</a>
+                    <a t-if="event.appointment_status == 'request' and event.access_token and partner_id and event._teaching_portal_can_cancel()"
+                       t-attf-href="/calendar/cancel/#{event.access_token}?partner_id=#{partner_id}&amp;withdraw=1"
+                       class="btn btn-sm btn-outline-danger"
+                       onclick="return window.confirm('Withdraw this booking request? Nothing is charged.');">Cancel Request</a>
                 </td>
             </tr>
         </tbody>
@@ -95,9 +110,15 @@
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="False"/>
             <h3 class="mt-3">My Sessions</h3>
+            <div t-if="cancelled" class="alert alert-info" role="status">The session was cancelled.</div>
+            <div t-if="withdrawn" class="alert alert-info" role="status">
+                Your request was withdrawn and the time is free again. Nothing is charged.
+                <a t-att-href="teaching_book_url">Book another time</a>.
+            </div>
+            <a t-att-href="teaching_book_url" class="btn btn-primary btn-sm mb-2">Book a Session</a>
             <t t-call="teaching_course_management.portal_teaching_student_selector"><t t-set="base_url" t-value="'/my/sessions'"/></t>
             <h5 class="mt-3">Upcoming</h5>
-            <p t-if="not upcoming" class="text-muted">No upcoming sessions. <a href="/appointment">Book a session</a>.</p>
+            <p t-if="not upcoming" class="text-muted">No upcoming sessions. <a t-att-href="teaching_book_url">Book a session</a>.</p>
             <t t-else="" t-call="portal.portal_table"><t t-set="rows" t-value="upcoming"/><t t-call="teaching_course_management.portal_teaching_session_rows"/></t>
             <h5 class="mt-4">Past</h5>
             <p t-if="not past" class="text-muted">No past sessions.</p>
@@ -109,11 +130,19 @@
         <t t-call="portal.portal_layout">
             <div class="mt-3">
                 <a href="/my/sessions">&#8592; My Sessions</a>
+                <div t-if="confirmed_meanwhile and event.appointment_status == 'booked'" class="alert alert-warning mt-2" role="status">
+                    Your teacher has just confirmed this session, so the request was not withdrawn.
+                    You can still cancel it below until midnight the night before.
+                </div>
+                <div t-if="booked and event.appointment_status == 'request'" class="alert alert-success mt-2" role="status">
+                    <strong>Request sent.</strong> Your teacher will confirm it; you will get an email.
+                    It is already listed under <a href="/my/sessions">My Sessions</a> as Pending Approval.
+                </div>
                 <h3 class="mt-2"><t t-out="' · '.join(filter(None, [event.subject_id.name, event.appointment_type_id.name]))"/></h3>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <dl class="row mb-0">
-                            <dt class="col-5">Status</dt><dd class="col-7"><span class="badge text-bg-light" t-field="event.appointment_status"/></dd>
+                            <dt class="col-5">Status</dt><dd class="col-7"><t t-set="status" t-value="event._teaching_portal_status()"/><span t-attf-class="badge #{status[1]}" t-out="status[0]"/></dd>
                             <dt class="col-5">When</dt><dd class="col-7"><span t-field="event.start" t-options="{'tz_name': event.appointment_type_id.appointment_tz, 'format': 'EEE d MMM y, HH:mm'}"/> (<span t-field="event.duration" t-options="{'widget': 'float_time'}"/>)</dd>
                             <dt class="col-5">Student(s)</dt><dd class="col-7" t-out="', '.join(event.teaching_student_ids.mapped('name'))"/>
                             <dt class="col-5">Instructor</dt><dd class="col-7" t-out="event.user_id.name"/>
@@ -144,10 +173,23 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <a t-if="can_cancel" t-attf-href="/calendar/cancel/#{event.access_token}?partner_id=#{partner_id}"
+                    <t t-if="can_cancel and event.appointment_status == 'request'">
+                        <a t-attf-href="/calendar/cancel/#{event.access_token}?partner_id=#{partner_id}&amp;withdraw=1"
+                           class="btn btn-outline-danger"
+                           onclick="return window.confirm('Withdraw this booking request? Nothing is charged.');">Cancel Request</a>
+                        <p class="text-muted small mt-2">
+                            Booked the wrong time? Withdraw the request yourself, no approval needed, then book again.
+                            <t t-if="event.teaching_pair_event_id">This is one of two back-to-back hours booked together: both are withdrawn.</t>
+                        </p>
+                    </t>
+                    <a t-elif="can_cancel" t-attf-href="/calendar/cancel/#{event.access_token}?partner_id=#{partner_id}"
                        class="btn btn-outline-danger"
                        onclick="return window.confirm('Cancel this session?');">Cancel</a>
-                    <p t-elif="event.appointment_status == 'booked'" class="text-muted">Changes are no longer possible. Please contact the academy.</p>
+                    <p t-elif="event.appointment_status in ('request', 'booked')" class="text-muted">
+                        <t t-if="event.teaching_course_id or len(event.teaching_student_ids) &gt; 1">This session is shared with other students, so it is cancelled by the academy.</t>
+                        <t t-else="">The free cancellation time has passed.</t>
+                        Please contact the academy to cancel it.
+                    </p>
                     <p class="text-muted small mt-2">To reschedule, cancel and book again. Free cancellation until midnight the night before.</p>
                 </div>
             </div>
@@ -159,7 +201,7 @@
             <h3 class="mt-3">My Courses</h3>
             <t t-call="teaching_course_management.portal_teaching_student_selector"><t t-set="base_url" t-value="'/my/courses'"/></t>
             <p t-if="not courses" class="text-muted">You are not enrolled in a course yet. <a t-att-href="teaching_announcements_url">See the announcements</a>.</p>
-            <div t-foreach="courses" t-as="course" class="card mb-3">
+            <div t-foreach="courses" t-as="course" t-attf-id="course-#{course.id}" class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title" t-out="course.name"/>
                     <p class="text-muted mb-2">

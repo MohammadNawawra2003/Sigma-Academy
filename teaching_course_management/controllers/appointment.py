@@ -1,4 +1,4 @@
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from dateutil.relativedelta import relativedelta
 from werkzeug.exceptions import Forbidden
@@ -23,6 +23,10 @@ class TeachingAppointment(WebsiteAppointment):
         values = super()._prepare_appointment_type_page_values(appointment_type, staff_user_id, resource_selected_id, **kwargs)
         if appointment_type.teaching_product_id:
             values['max_capacity'] = 1  # one booking = one student; a group seat is counted per student
+            values['asked_capacity'] = 1  # preselected, else the group calendar hides its hours until "1" is picked
+            # Sari 10 Oct: one calendar per session type, switchable as tabs on the booking page
+            values['teaching_types'] = request.env['appointment.type'].sudo().search(
+                [('teaching_product_id', '!=', False), ('is_published', '=', True)])
         return values
 
     def _get_extra_calendar_event_params(self, **kwargs):
@@ -78,17 +82,25 @@ class TeachingAppointment(WebsiteAppointment):
         response = super()._handle_appointment_form_submission(
             appointment_type, date_start, date_end, description, duration, allday, answer_input_values, name,
             customer, appointment_invite, guests, staff_user, asked_capacity, booking_line_values, extra)
+        token = urlsplit(response.location).path.rsplit('/', 1)[-1]
+        event = request.env['calendar.event'].sudo().search([('access_token', '=', token)], limit=1) if token else None
+        if not event:
+            return response
         if second_slot:
             second_end = date_end + relativedelta(hours=second_slot.duration)
             values = appointment_type._prepare_calendar_event_values(
                 asked_capacity, [dict(v) for v in booking_line_values or []], description, second_slot.duration, allday,
                 appointment_invite, guests, name, customer, staff_user, date_end, second_end)
-            request.env['calendar.event'].with_context(
+            second = request.env['calendar.event'].with_context(
                 mail_notify_author=True, mail_create_nolog=True, mail_create_nosubscribe=True,
                 allowed_company_ids=self._get_allowed_companies(staff_user or appointment_type.create_uid).ids,
             ).sudo().with_context(skip_contact_description=True).create({
                 'appointment_answer_input_ids': [Command.create(dict(v)) for v in answer_input_values],
                 **values,
                 **extra,
+                'teaching_pair_event_id': event.id,
             })
-        return response
+            event.teaching_pair_event_id = second  # a withdrawn 2-hour request never leaves half behind
+        # Sari 10 Oct: the family lands on its own session page (Pending Approval, listed in My
+        # Sessions), not on the generic appointment page that reads like an approval screen.
+        return request.redirect('/my/sessions/%s?booked=1' % event.id)

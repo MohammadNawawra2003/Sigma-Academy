@@ -26,13 +26,30 @@
                 </div>
                 <div class="row mb-4">
                     <div class="col-sm-3"/>
-                    <small class="col-sm text-muted">Nothing is confirmed automatically. Sari approves every booking.</small>
+                    <small class="col-sm text-muted">Your teacher confirms every booking. Until then it shows as Pending Approval in My Sessions.</small>
                 </div>
             </t>
         </xpath>
     </template>
 
-    <template id="appointment_info_teaching" inherit_id="appointment.appointment_info" name="Teaching: 2 hours unavailable">
+    <template id="appointment_info_teaching" inherit_id="appointment.appointment_info" name="Teaching: type tabs, 2 hours unavailable">
+        <!-- Sari 10 Oct: one calendar per session type; the tabs switch between them -->
+        <xpath expr="//div[hasclass('o_appointment_info_main')]/h4" position="before">
+            <ul t-if="teaching_types and len(teaching_types) &gt; 1" class="nav nav-pills o_teaching_type_tabs mb-3">
+                <li t-foreach="teaching_types" t-as="teaching_type" class="nav-item">
+                    <a t-if="teaching_type == appointment_type" class="nav-link active" aria-current="page"
+                       t-attf-href="/appointment/#{teaching_type.id}" t-out="teaching_type.name"/>
+                    <a t-else="" class="nav-link" t-attf-href="/appointment/#{teaching_type.id}" t-out="teaching_type.name"/>
+                </li>
+            </ul>
+            <p t-if="teaching_types" class="text-muted small">
+                <t t-out="appointment_type.name"/>:
+                <t t-if="appointment_type.teaching_is_group">up to <t t-out="appointment_type._teaching_capacity()"/> students</t>
+                <t t-else="">one student</t>,
+                <span t-out="appointment_type.teaching_price" t-options="{'widget': 'monetary', 'display_currency': appointment_type.teaching_product_id.currency_id}"/> per hour.
+                Only this type's free hours are shown.
+            </p>
+        </xpath>
         <xpath expr="//div[hasclass('o_appointment_info_main')]/h4" position="after">
             <div t-if="state == 'teaching-two-hours'" class="alert alert-warning" role="alert">
                 The next hour is not free, so the 2-hour booking was not made. Nothing was booked.
@@ -44,7 +61,7 @@
     <!-- The meeting link is shared only once the academy confirms the booking -->
     <template id="appointment_validated_teaching" inherit_id="appointment.appointment_validated" name="Teaching: hide link while pending">
         <xpath expr="//h5[contains(., 'We will come back to you to confirm it.')]" position="after">
-            <p t-if="event.is_teaching" class="text-muted">Nothing is confirmed automatically. Sari approves every booking.</p>
+            <p t-if="event.is_teaching" class="text-muted">Your teacher confirms every booking. Until then it shows as Pending Approval in My Sessions.</p>
         </xpath>
         <xpath expr="//div[@t-if='event.videocall_location']" position="attributes">
             <attribute name="t-if">event.videocall_location and not (event.is_teaching and event.appointment_status == 'request')</attribute>

@@ -27,8 +27,12 @@ class TeachingCommonMixin:
         cls.type_group = env.ref('teaching_course_management.appointment_type_group')
         cls.type_review = env.ref('teaching_course_management.appointment_type_review')
         cls.type_course = env.ref('teaching_course_management.appointment_type_course')
-        (cls.type_one | cls.type_group | cls.type_review | cls.type_course).write(
-            {'staff_user_ids': [Command.set(cls.instructor.ids)], 'slot_ids': [Command.clear()]})
+        types = cls.type_one | cls.type_group | cls.type_review | cls.type_course
+        # Start from no published slots. SQL, because demo data may hold bookings in them and the
+        # ORM refuses to delete a booked slot.
+        env.cr.execute('DELETE FROM appointment_slot WHERE appointment_type_id IN %s', [tuple(types.ids)])
+        types.invalidate_recordset(['slot_ids'])
+        types.write({'staff_user_ids': [Command.set(cls.instructor.ids)]})
         Partner = env['res.partner']
         cls.subject = env['teaching.subject'].create({'name': 'Physics (test)'})
         cls.grade = env['teaching.grade'].create({'name': 'Grade 11 (test)'})

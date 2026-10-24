@@ -46,6 +46,9 @@ class CalendarEvent(models.Model):
     teaching_waitlist_ids = fields.Many2many(
         'res.partner', 'teaching_event_waitlist_rel', 'event_id', 'partner_id', string='Waitlist',
         domain=[('is_student', '=', True)], copy=False)
+    teaching_pair_event_id = fields.Many2one(
+        'calendar.event', 'Booked Together With', copy=False, readonly=True, index='btree_not_null',
+        help='The other hour of a 2-hour website booking. Withdrawing a pending request withdraws both.')
     teaching_seats_taken = fields.Integer('Seats Taken', compute='_compute_teaching_seats')
     teaching_capacity = fields.Integer('Capacity', compute='_compute_teaching_seats')
 
@@ -197,8 +200,23 @@ class CalendarEvent(models.Model):
         self.ensure_one()
         if self.teaching_course_id or len(self.teaching_student_ids) > 1:
             return False
-        return self.appointment_status == 'request' or (
-            self.appointment_status == 'booked' and fields.Datetime.now() < self.teaching_cancel_deadline)
+        now = fields.Datetime.now()
+        # A pending request can be withdrawn until it starts (Sari 23 Oct: wrong day booked).
+        return (self.appointment_status == 'request' and now < self.start) or (
+            self.appointment_status == 'booked' and now < self.teaching_cancel_deadline)
+
+    def _teaching_portal_status(self):
+        """(label, badge class) for the family pages: they read "Pending Approval" and "Confirmed",
+        never the back-office words "Request" and "Booked"."""
+        self.ensure_one()
+        labels = {
+            'request': (_('Pending Approval'), 'text-bg-warning'),
+            'booked': (_('Confirmed'), 'text-bg-success'),
+        }
+        if self.appointment_status in labels:
+            return labels[self.appointment_status]
+        selection = dict(self._fields['appointment_status']._description_selection(self.env))
+        return selection.get(self.appointment_status, ''), 'text-bg-light'
 
     def _teaching_recipients(self):
         return self.teaching_student_ids | self.teaching_student_ids.parent_id
@@ -214,6 +232,9 @@ class CalendarEvent(models.Model):
     # ------------------------------------------------------------------ buttons
 
     def action_teaching_approve(self):
+        # Serialise with a family withdrawing the same request, then re-read the status.
+        self.env.cr.execute('SELECT id FROM calendar_event WHERE id IN %s FOR UPDATE', [tuple(self.ids)])
+        self.invalidate_recordset(['appointment_status', 'active'])
         self._teaching_check_status(('request',), _('Approve'))
         for event in self:
             event.action_set_appointment_booked()
