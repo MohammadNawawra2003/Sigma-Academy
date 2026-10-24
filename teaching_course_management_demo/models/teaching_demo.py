@@ -57,12 +57,18 @@ class ResCompany(models.Model):
 
         # Published availability (Flexible schedule = dated slots), from next Monday on
         monday = date.today() + relativedelta(days=1, weekday=MO)
-        slots = [(0, 17, 0, 1), (0, 18, 0, 1), (0, 19, 15, 1), (2, 17, 0, 2), (7, 9, 0, 2), (1, 16, 0, 1), (3, 20, 0, 1)]
-        one.write({'slot_ids': [Command.create({
-            'slot_type': 'unique',
-            'start_datetime': _utc(monday + timedelta(days=d), h, m),
-            'end_datetime': _utc(monday + timedelta(days=d), h, m) + timedelta(hours=dur),
-        }) for d, h, m, dur in slots]})
+        # each session type has its own calendar (Sari 10 Oct), so each gets its own hours
+        type_slots = {
+            one: [(0, 17, 0, 1), (0, 18, 0, 1), (0, 19, 15, 1), (2, 17, 0, 2), (7, 9, 0, 2), (1, 16, 0, 1), (3, 20, 0, 1)],
+            group: [(1, 18, 0, 1), (4, 17, 0, 1), (8, 17, 0, 2)],
+            review: [(2, 20, 0, 1)],
+        }
+        for atype, slots in type_slots.items():
+            atype.write({'slot_ids': [Command.create({
+                'slot_type': 'unique',
+                'start_datetime': _utc(monday + timedelta(days=d), h, m),
+                'end_datetime': _utc(monday + timedelta(days=d), h, m) + timedelta(hours=dur),
+            }) for d, h, m, dur in slots]})
 
         def session(students, atype, subject, day, hour, minute=0, duration=1.0, status='booked', **extra):
             start = _utc(day, hour, minute)
@@ -99,7 +105,7 @@ class ResCompany(models.Model):
         session([st['layan']], one, maths, _day(1), 18, 15)
         session([st['rami']], one, physics, _day(2), 16, status='request')
         session([st['layan'], st['karim'], st['rami']], group, maths, _day(3), 17)
-        late = session([st['nour']], one, maths, _day(-1), 17)
+        late = session([st['nour']], one, maths, _day(-1), 15)  # not 17: on a Friday _day(-1) == _day(-2)
         late.write({'appointment_status': 'late_cancelled', 'teaching_actual_duration': 1.0})
         no_show = session([st['karim']], review, maths, _day(-1), 19)
         no_show.action_set_appointment_no_show()

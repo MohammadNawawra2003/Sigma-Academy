@@ -1,6 +1,6 @@
 {
     'name': 'Teaching — Demo Data',
-    'version': '19.0.1.0.1',
+    'version': '19.0.1.0.2',
     'category': 'Services',
     'summary': 'Sigma Academy demo data: instructor, families, slots, sessions in every status, courses, invoices',
     'author': 'Al Shayeb Auditing and Accountancy Co',
